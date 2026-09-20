@@ -1,0 +1,15 @@
+*.iml
+.gradle
+/local.properties
+/.idea
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+/.kotlin
+
+# Model weights ARE tracked in this edition. That is the opposite of Core Edition, where the same
+# paths are ignored: the weights are the whole point of the YOLO Edition, and they are what makes
+# this repository AGPL-3.0. Do not add an ignore rule for app/src/main/assets/*.tflite.

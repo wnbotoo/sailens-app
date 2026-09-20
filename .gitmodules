@@ -1,0 +1,3 @@
+[submodule "sailens"]
+	path = sailens
+	url = https://github.com/wnbotoo/sailens-android.git
