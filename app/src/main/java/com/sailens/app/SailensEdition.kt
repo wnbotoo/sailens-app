@@ -17,8 +17,8 @@ import com.sailens.vlm.SceneDescriber
 /**
  * What the official Sailens distribution offers.
  *
- * Unlike the Sailens Android reference host, this repository **packages its own weights**, so it promises navigation
- * assistance and declares it required (architecture.md §5.1, §5.2). If the model is missing or
+ * Unlike the Sailens Android reference host, this repository **packages its own weights**, so it
+ * promises navigation assistance and declares it required (architecture.md §5.1, §5.2). If the model is missing or
  * its class definition does not match, that is a fatal configuration state rather than a quiet
  * fallback -- a build that cannot guide anyone must say so, out loud, on a channel the user can
  * perceive.
@@ -43,8 +43,8 @@ fun sailensEditionSpec(
             if (sceneDescriber.isAvailable) null else StaticUnavailableReason.EngineUnavailable
         },
     ),
-    // The official distribution packages its own weights, so it promises navigation assistance. A missing
-    // or mismatched model here is a configuration failure, not a shrug: shipping a build that
+    // The official distribution packages its own weights, so it promises navigation assistance.
+    // A missing or mismatched model here is a configuration failure, not a shrug: shipping a build that
     // silently cannot guide anyone is the outcome the capability model exists to prevent.
     expectations = CapabilityExpectations(
         guidanceRequired = true,
