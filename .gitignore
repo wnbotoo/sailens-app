@@ -10,6 +10,7 @@
 local.properties
 /.kotlin
 
-# Model weights ARE tracked in this edition. That is the opposite of Core Edition, where the same
-# paths are ignored: the weights are the whole point of the YOLO Edition, and they are what makes
-# this repository AGPL-3.0. Do not add an ignore rule for app/src/main/assets/*.tflite.
+# Model weights ARE tracked in this official distribution. Sailens Android deliberately ignores
+# the same paths because the reusable platform ships zero weights. The current bundled weights are
+# part of why this distribution is released under AGPL-3.0. Do not add an ignore rule for
+# app/src/main/assets/*.tflite.
