@@ -1,79 +1,92 @@
-# AGENTS.md — Sailens YOLO Edition
+# AGENTS.md — Official Sailens Android distribution
 
 ```text
-Repository: wnbotoo/sailens-yolo      Edition: YOLO Edition   License: AGPL-3.0
-Upstream:   wnbotoo/sailens-android   Edition: Core Edition   License: Apache-2.0
+Repository:  wnbotoo/sailens-app
+Product:     Sailens
+License:     AGPL-3.0 under the current bundled-model choices
+Platform:    wnbotoo/sailens-android (Apache-2.0)
+Namespace:   com.sailens
+applicationId: com.sailens
 ```
 
-## Accepted product positioning
+This repository is **not a fork**. It is the thin first-party Sailens application over Sailens
+Android's `sailens-*` libraries, consumed through a Gradle composite build. Sailens Android is
+pinned as the `sailens/` git submodule; that exact commit is the platform version boundary.
 
-This repository is the current home of the **official first-party Sailens Android distribution**.
-Its next identity migration is already decided but is intentionally not implemented by the docs
-change:
+Do not publish the platform modules to Maven as part of ordinary application work. Source/composite
+consumption is deliberate until a stable external SDK surface and independent consumers justify a
+separate Maven-distribution milestone.
+
+## Ownership boundary
+
+Reusable capability belongs in Sailens Android:
+
+- camera/runtime/vision infrastructure;
+- Guidance and Describe implementation;
+- output/accessibility mechanisms;
+- reusable shell and capability/preflight model;
+- generic native/runtime/model support.
+
+This repository owns distribution choices:
+
+- the thin Android host;
+- `applicationId = "com.sailens"` and the Sailens product identity;
+- official bundled model weights;
+- capability expectations (currently Guidance required);
+- supported/default product configuration;
+- release/store/signing metadata;
+- distribution and model-provenance notices.
+
+If behaviour would be useful to another Sailens consumer, implement it in Sailens Android and take
+it here through a submodule bump after licence review. Do not duplicate platform code locally.
+
+## What is here
 
 ```text
-repository:    wnbotoo/sailens-yolo  -> wnbotoo/sailens-app
-product:       Sailens YOLO Edition  -> Sailens
-namespace:     com.sailens           -> com.sailens
-applicationId: com.sailens.yolo      -> com.sailens
+app/                         official host, identity and weights
+app/src/main/assets/         sem.tflite, det.tflite — tracked deliberately
+docs/model-provenance.md     exact model provenance/licence records
+DISTRIBUTION_NOTICE.md       distribution licence/source obligations
+docs/official-distribution.md product/repository contract
+sailens/                     Sailens Android git submodule
+settings.gradle.kts          includeBuild("sailens") + platform version catalog
 ```
 
-Rename this repository in place; do not delete/recreate or fresh-root it again. "YOLO" remains in
-model provenance/licence material, not in the long-term product brand. The platform/reference host
-remains `wnbotoo/sailens-android` and is planned to use
-`applicationId = "com.sailens.reference"`.
+The bundled weights are intentionally tracked here and intentionally absent from Sailens Android.
+Never "fix" the platform by committing these models there.
 
-Do not publish the `sailens-*` modules to Maven as part of this positioning work. The official app
-continues to consume an exact Sailens Android main commit through the submodule + Gradle composite
-build. See `docs/official-distribution.md` and
-`sailens/docs/distribution-model.md`.
+"YOLO" is model provenance, **not** product branding. Keep Ultralytics/model-specific facts in
+`docs/model-provenance.md` and `DISTRIBUTION_NOTICE.md`; do not reintroduce "YOLO Edition" as an
+app/repository identity.
 
-**This repository is no longer a fork.** It is a thin application over Core Edition's
-`sailens-*` libraries, consumed through a Gradle composite build. Core Edition is pinned as the
-`sailens/` git submodule, and that submodule commit is the version boundary — nothing is published
-to Maven.
+## Identity guardrail
 
-Everything that existed only to keep a fork merge base is gone: the `merge=ours` driver, the
-upstream sync recipe, the disabled push remote, the prefix-block convention in this file, and the
-rule that this repository stay code-identical to upstream. Core Edition's own `AGENTS.md` lives at
-`sailens/AGENTS.md` and applies to the code in that submodule.
-
-## What is actually here
+`app/build.gradle.kts` must keep:
 
 ```text
-app/                    the whole edition: host wiring, identity, weights
-app/src/main/assets/    sem.tflite, det.tflite — tracked here, ignored upstream
-docs/yolo-models.md     where those weights came from and under what terms
-sailens/                Core Edition, as a submodule
-settings.gradle.kts     includeBuild("sailens") + Core Edition's version catalog
+namespace     = com.sailens
+applicationId = com.sailens
+APP_LICENSE    = AGPL-3.0
+APP_SOURCE_URL = https://github.com/wnbotoo/sailens-app
 ```
 
-- **The weights are the point.** `app/src/main/assets/{sem,det}.tflite` are committed deliberately.
-  Upstream ignores those same paths because it ships zero weights; here they are what makes this
-  edition AGPL-3.0. Do not add an ignore rule for them, and do not "fix" upstream by proposing it
-  commit models.
-- **This edition declares Guidance required** (`app/.../SailensEdition.kt`,
-  `guidanceRequired = true`). If the packaged model goes missing, its output cannot be read, or its
-  class count or taxonomy stops matching, the app enters the fatal configuration state and says so
-  out loud rather than starting up unable to guide anyone. That is the difference from upstream,
-  which promises nothing.
-- **This edition has its own identity** (`app/build.gradle.kts`): `applicationId = "com.sailens.yolo"`,
-  `APP_LICENSE = "AGPL-3.0"`, and `APP_SOURCE_URL` pointing at this repository. `namespace` stays
-  `com.sailens` on purpose — no source package moves. When syncing `app/` against Core Edition's
-  host, keep these three: copying Core Edition's values ships an AGPL build that tells its users it
-  is Apache-2.0, points them at the wrong source, and cannot be installed next to Core Edition.
+Sailens Android's reference host uses `com.sailens.reference`. This is what lets both installs
+coexist while reserving the plain `com.sailens` identity for the shipping product.
+
+`DistributionIdentityTest` pins the package, licence and source URL. If host code is synced from
+Sailens Android, those values must remain distribution-owned.
 
 ## Working on it
 
 ```powershell
-# ANDROID_HOME must be set; this clone has no local.properties.
 $env:ANDROID_HOME = "C:/Users/wnbot/AppData/Local/Android/Sdk"
 git submodule update --init
 .\gradlew.bat --no-daemon :app:assembleDebug
 ```
 
-- A change that belongs to the platform goes **upstream**, in the submodule's own repository, and
-  arrives here as a submodule bump. A change that belongs to this edition — weights, identity,
-  expectations, YOLO-specific decoding — goes in `app/`.
-- Do not copy code from here into Core Edition unless a license review confirms it is free of
-  AGPL-covered material. See `YOLO_EDITION_NOTICE.md`.
+For release-relevant changes also verify release build, instrumentation tests and a real arm64
+device. Model changes must follow `docs/model-provenance.md`, including the manual semantic
+channel-order gate and device performance checks.
+
+The full positioning decisions are in `docs/official-distribution.md` and
+`sailens/docs/distribution-model.md`.
