@@ -2,9 +2,10 @@
 
 # Official Sailens Android distribution positioning
 
-> Status: **implemented product identity.** This repository is the first-party Sailens Android
-> distribution. The GitHub repository is named `sailens-app`, and the Android product identity is
-> the plain `com.sailens` application ID.
+> Status: **Android product identity implemented; GitHub repository rename pending.** This is the
+> first-party Sailens Android distribution. Its Android identity is already the plain
+> `com.sailens` application ID. After final validation, rename the existing GitHub repository in
+> place from `sailens-yolo` to `sailens-app`.
 
 The authoritative cross-repository decision is in Sailens Android:
 [`sailens/docs/distribution-model.md`](../sailens/docs/distribution-model.md).
@@ -22,11 +23,11 @@ The intended app-store product name is simply:
 
 This is not a second platform and not a fork of the platform. It should remain a thin host.
 
-## 2. Target identity
+## 2. Product identity
 
 | Item | Identity |
 |---|---|
-| Repository | `wnbotoo/sailens-app` |
+| Repository | `wnbotoo/sailens-app` after the pending in-place rename |
 | Product name | **Sailens** |
 | Android namespace | `com.sailens` |
 | applicationId | `com.sailens` |
@@ -70,11 +71,11 @@ the platform.
 
 ## 5. YOLO becomes provenance, not product branding
 
-The current repository name and product name expose "YOLO" because this distribution was originally
-defined around its bundled models.
+This distribution was originally defined around its bundled YOLO models, which is why the old
+repository/product identity exposed "YOLO". The Android product branding has now been migrated;
+only the GitHub repository rename remains pending.
 
-Under the accepted positioning, model architecture is an implementation/provenance detail rather
-than the product identity. After the migration:
+Model architecture is an implementation/provenance detail rather than the product identity:
 
 - users see **Sailens**, not "YOLO Edition";
 - YOLO/Ultralytics names remain in model provenance, attribution, compatibility and licence records;
