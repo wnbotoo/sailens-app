@@ -72,8 +72,9 @@ Sailens Android 的 `.gitignore` 忽略 `app/src/main/assets/*.tflite`——它�
    报错，会静默把"人行道"当"马路"讲给一个看不见的人听。用一张已知场景实测 argmax 结果再谈精度。
 3. 更新本文档的全部 10 项（含 sha256）。
 4. 构建并启动这个发行版。它声明了 Guidance required，所以 output 解析不了或类别数不对的模型
-   会在用户按下开始之前就停在 fatal configuration 屏——这就是现在的契约闸。检查本身由 Core
-   Edition 的测试覆盖：在本仓库根目录跑 `./gradlew :sailens:sailens-guidance:testDebugUnitTest`。
+   会在用户按下开始之前就停在 fatal configuration 屏——这就是现在的契约闸。检查本身由
+   Sailens Android 的测试覆盖：在本仓库根目录跑
+   `./gradlew :sailens:sailens-guidance:testDebugUnitTest`。
 5. 真机复核 Sailens Android 的性能红线（`sailens/docs/architecture.zh-CN.md` §12.3）：
    `sem: postprocessBackend = "native_score"` 且 `outputReadTimeMs ≈ 0`；
    `det: postprocessBackend = "native_bbox_nms_float_handle"`。
