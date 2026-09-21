@@ -38,6 +38,10 @@ simply as Sailens.
 Do not move distribution-specific or model-covered material into Sailens Android unless a licence
 review confirms that the change can be clearly licensed under Apache-2.0.
 
+This is a project contribution/reuse rule. It does not by itself limit a copyright holder's use of
+material for which that holder owns the relevant rights. Contributions from other authors remain
+subject to the rights and licences that apply to those contributions.
+
 ## Current model provenance
 
 The current bundled models are documented in
