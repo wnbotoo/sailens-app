@@ -24,19 +24,20 @@ This repository's own code is the thin official application host plus product
 identity, capability expectations and release wiring. It also bundles the model
 weights used by the official distribution.
 
-Under the current bundled-model choices, the distributed application is
-released under AGPL-3.0. Distribution therefore carries AGPL-3.0 obligations,
-including complete corresponding source for the exact build; that source
-includes the exact Sailens Android commit pinned at sailens/.
+The current bundle includes YOLO26 model weights that this distribution treats
+as AGPL-3.0-covered under the documented upstream licensing position. Under the
+current bundled-model choices, the distributed application is therefore
+released under AGPL-3.0. Distribution carries AGPL-3.0 obligations, including
+complete corresponding source for the exact build; that source includes the
+exact Sailens Android commit pinned at sailens/.
 
 Model files carry their own upstream and training-dataset terms independently
 of the platform code licence. The bundled semantic segmentation model is trained
-on Cityscapes, whose terms restrict commercial use. See
+on Cityscapes, which is restricted to NON-COMMERCIAL use. See
 docs/model-provenance.md for the complete current records.
 
-The current bundle includes YOLO-family model material. Sailens is not
-affiliated with, endorsed by, or sponsored by Ultralytics. "YOLO" is used only
-descriptively in model provenance.
+Sailens is not affiliated with, endorsed by, or sponsored by Ultralytics.
+"YOLO" is used only descriptively in model provenance.
 
 Third-party components
 ----------------------
