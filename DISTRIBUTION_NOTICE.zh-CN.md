@@ -35,6 +35,9 @@ Sailens 而消失。
 不要把 distribution-specific 或受模型许可覆盖的材料移回 Sailens Android，除非 licence review
 确认该变更可以明确按 Apache-2.0 授权。
 
+这是一条项目贡献/复用规则。它本身不限制版权所有者对其拥有相关权利材料的使用；来自其他作者的
+贡献仍受适用于这些贡献的权利与许可约束。
+
 ## 当前模型 provenance
 
 当前打包模型的完整记录见
