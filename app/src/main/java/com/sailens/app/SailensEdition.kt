@@ -3,13 +3,14 @@ package com.sailens.app
 import android.content.Context
 import com.google.ai.edge.litert.Accelerator
 import com.sailens.guidance.semantics.CityscapesNavigationSemantics
-import com.sailens.guidance.semantics.NavigationSemanticsBinding
+import com.sailens.guidance.semantics.SemanticModelPreflight
 import com.sailens.runtime.CatalogModelSourceResolver
 import com.sailens.runtime.ModelType
 import com.sailens.shell.app.CapabilityExpectations
 import com.sailens.shell.app.DescribeSpec
 import com.sailens.shell.app.GuidanceSpec
 import com.sailens.shell.app.SailensAppSpec
+import com.sailens.shell.app.StaticUnavailableReason
 import com.sailens.vision.taxonomy.CityscapesTaxonomy
 import com.sailens.vlm.SceneDescriber
 
@@ -22,29 +23,25 @@ import com.sailens.vlm.SceneDescriber
  * fallback -- a build that cannot guide anyone must say so, out loud, on a channel the user can
  * perceive.
  *
- * Every check here is cheap on purpose (§5.2): it resolves a model source and closes the stream,
- * and asks the semantics whether they were written for the taxonomy. Nothing is compiled and no
- * accelerator is touched.
+ * The Guidance check reads the packaged model's TFLite metadata tables and compares its output
+ * class count against the declared taxonomy. That is still cheap (§5.2): a memory-mapped read of a
+ * few hundred bytes, no compiled model, no accelerator, no inference. It matters more here than in
+ * Core Edition, because this build ships the weights: a packaging mistake is caught before the
+ * user presses start rather than after they have begun walking. What it cannot check is channel
+ * *order* -- the models carry no labels, so which channel is `person` remains a manual release
+ * gate (§6.2, docs/models.md).
  */
 fun sailensEditionSpec(
     context: Context,
     sceneDescriber: SceneDescriber,
 ): SailensAppSpec = SailensAppSpec(
     guidance = GuidanceSpec(
-        semanticModelPresent = {
-            CatalogModelSourceResolver
-                .source(ModelType.SEMANTIC_SEGMENTATION, Accelerator.GPU)
-                .exists(context)
-        },
-        taxonomyCompatible = {
-            NavigationSemanticsBinding.validate(
-                taxonomy = CityscapesTaxonomy,
-                semantics = CityscapesNavigationSemantics,
-            ) == NavigationSemanticsBinding.Result.Compatible
-        },
+        verifySemanticModel = { verifySemanticModel(context) },
     ),
     describe = DescribeSpec(
-        engineAvailable = { sceneDescriber.isAvailable },
+        verifyEngine = {
+            if (sceneDescriber.isAvailable) null else StaticUnavailableReason.EngineUnavailable
+        },
     ),
     // The YOLO Edition packages its own weights, so it promises navigation assistance. A missing
     // or mismatched model here is a configuration failure, not a shrug: shipping a build that
@@ -54,3 +51,31 @@ fun sailensEditionSpec(
         describeRequired = false,
     ),
 )
+
+/**
+ * Translates the Guidance pipeline's own verdict into the shell's vocabulary.
+ *
+ * The shell owns the reasons it can present and speak; what makes a semantic model usable is a
+ * Guidance question, answered by Guidance (§6.11).
+ */
+private fun verifySemanticModel(context: Context): StaticUnavailableReason? {
+    val result = SemanticModelPreflight.check(
+        context = context,
+        source = CatalogModelSourceResolver.source(ModelType.SEMANTIC_SEGMENTATION, Accelerator.GPU),
+        taxonomy = CityscapesTaxonomy,
+        semantics = CityscapesNavigationSemantics,
+    )
+    return when (result) {
+        SemanticModelPreflight.Result.Compatible -> null
+        SemanticModelPreflight.Result.ModelSourceMissing -> StaticUnavailableReason.ModelSourceMissing
+        is SemanticModelPreflight.Result.SemanticsMismatch -> StaticUnavailableReason.TaxonomyIncompatible
+        is SemanticModelPreflight.Result.OutputUnreadable ->
+            StaticUnavailableReason.ModelOutputUnreadable(result.detail)
+
+        is SemanticModelPreflight.Result.ClassCountMismatch ->
+            StaticUnavailableReason.ModelClassCountMismatch(
+                declared = result.declared,
+                found = result.candidates,
+            )
+    }
+}

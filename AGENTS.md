@@ -20,6 +20,7 @@ rule that this repository stay code-identical to upstream. Core Edition's own `A
 ```text
 app/                    the whole edition: host wiring, identity, weights
 app/src/main/assets/    sem.tflite, det.tflite — tracked here, ignored upstream
+docs/yolo-models.md     where those weights came from and under what terms
 sailens/                Core Edition, as a submodule
 settings.gradle.kts     includeBuild("sailens") + Core Edition's version catalog
 ```
@@ -29,9 +30,15 @@ settings.gradle.kts     includeBuild("sailens") + Core Edition's version catalog
   edition AGPL-3.0. Do not add an ignore rule for them, and do not "fix" upstream by proposing it
   commit models.
 - **This edition declares Guidance required** (`app/.../SailensEdition.kt`,
-  `guidanceRequired = true`). If the packaged model goes missing or its class definition stops
-  matching, the app enters the fatal configuration state and says so out loud rather than starting
-  up unable to guide anyone. That is the difference from upstream, which promises nothing.
+  `guidanceRequired = true`). If the packaged model goes missing, its output cannot be read, or its
+  class count or taxonomy stops matching, the app enters the fatal configuration state and says so
+  out loud rather than starting up unable to guide anyone. That is the difference from upstream,
+  which promises nothing.
+- **This edition has its own identity** (`app/build.gradle.kts`): `applicationId = "com.sailens.yolo"`,
+  `APP_LICENSE = "AGPL-3.0"`, and `APP_SOURCE_URL` pointing at this repository. `namespace` stays
+  `com.sailens` on purpose — no source package moves. When syncing `app/` against Core Edition's
+  host, keep these three: copying Core Edition's values ships an AGPL build that tells its users it
+  is Apache-2.0, points them at the wrong source, and cannot be installed next to Core Edition.
 
 ## Working on it
 

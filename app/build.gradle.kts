@@ -40,7 +40,15 @@ android {
     compileSdk = 37
 
     defaultConfig {
-        applicationId = "com.sailens"
+        // Deliberately NOT `namespace` (which stays Core Edition's `com.sailens`): this is the Play
+        // Store identity, and it is permanently reserved by the first published build. This edition
+        // publishes, so it takes the `.yolo` suffix and leaves plain `com.sailens` available to the
+        // Core Edition. Changing it after publishing is impossible, so it must diverge before the
+        // first upload, not after. Everything derived from it — the FileProvider authority,
+        // WorkManager's DYNAMIC_RECEIVER permission — uses the ${applicationId} placeholder and
+        // follows automatically; no source package moves. It also lets both editions sit on one
+        // device at once, which is how they get compared.
+        applicationId = "com.sailens.yolo"
         // Android 12 (API 31). 31 is the floor for Build.SOC_MANUFACTURER/SOC_MODEL used by
         // DeviceHardwareProfileProvider, and keeps device reach broad for the GPU-only release.
         minSdk = 31
@@ -48,18 +56,19 @@ android {
         versionCode = 1
         versionName = "1.0"
 
-        // Distribution identity, surfaced on the Settings screen. Apache-2.0 requires recipients to
-        // get the license; an app is the one place users actually look, so it is shown in-product
-        // rather than only in the repo. A redistribution under different terms overrides these two
-        // and nothing else.
-        buildConfigField("String", "APP_LICENSE", "\"Apache-2.0\"")
-        buildConfigField("String", "APP_SOURCE_URL", "\"https://github.com/wnbotoo/sailens-android\"")
+        // YOLO Edition: this build bundles AGPL-3.0 weights, so the distributed work is AGPL-3.0
+        // and users must be pointed at THIS repository's corresponding source, not Core Edition's.
+        // These two lines plus applicationId above are the whole of the edition's runtime identity
+        // delta — see YOLO_EDITION_NOTICE.md.
+        buildConfigField("String", "APP_LICENSE", "\"AGPL-3.0\"")
+        buildConfigField("String", "APP_SOURCE_URL", "\"https://github.com/wnbotoo/sailens-yolo\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         // arm64-v8a covers every modern 64-bit Android SoC (Qualcomm, MediaTek Dimensity, Google
         // Tensor) — this is NOT a vendor restriction. It drops 32-bit-only and x86 (emulator/ChromeOS)
-        // to shrink the APK and native build time for the packaged native libs (OpenCV + sailens_ml).
+        // to shrink the APK and native build time for the packaged native libs (OpenCV plus Core
+        // Edition's libsailens_runtime / libsailens_vision / libsailens_guidance).
         ndk {
             abiFilters += "arm64-v8a"
         }
@@ -76,7 +85,7 @@ android {
         release {
             buildConfigField("boolean", "SHOW_DIAGNOSTICS", "false")
             // R8 relies on the default native-methods keep rule plus the JNI keeps in
-            // :data consumer-rules.pro (JNI is name-bound). Smoke-test a release build on
+            // sailens-runtime/vision/guidance consumer-rules.pro. Smoke-test a release build on
             // device before relying on it: name-based JNI / reflection break at runtime, not build.
             isMinifyEnabled = true
             isShrinkResources = true
@@ -131,7 +140,6 @@ dependencies {
     implementation("com.sailens:sailens-vision")
     implementation("com.sailens:sailens-vlm")
     implementation("com.sailens:sailens-guidance")
-    implementation("com.sailens:data")
     implementation("com.sailens:sailens-camera")
     implementation("com.sailens:sailens-output")
     implementation("com.sailens:sailens-describe")

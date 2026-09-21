@@ -12,6 +12,7 @@ the trademark disclaimer.
 
 ```text
 app/       the edition: host wiring, identity, expectations, model weights
+docs/      provenance and licences of the bundled weights (yolo-models.md)
 sailens/   Core Edition (wnbotoo/sailens-android), as a git submodule
 ```
 

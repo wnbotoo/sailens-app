@@ -19,7 +19,7 @@ YOLO Edition:
   License: AGPL-3.0
 ```
 
-YOLO Edition 是 Core Edition 的下游发行版。通用功能开发应先在 Core Edition 进行，然后向下游同步。
+YOLO Edition 是 Core Edition 的下游发行版，通过 Gradle composite build 把 Core Edition 当作 `sailens/` git submodule 引入，而不是 fork。通用功能在 Core Edition 开发，以 submodule bump 的方式进入这里；本仓库只承载 edition 本身（`app/`）和它的权重。
 
 ## 许可边界
 

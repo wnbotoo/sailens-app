@@ -20,7 +20,7 @@ YOLO Edition:
   License: AGPL-3.0
 ```
 
-YOLO Edition is a downstream distribution of Core Edition. General feature development should happen in Core Edition first and then be synchronized downstream.
+YOLO Edition is a downstream distribution of Core Edition, consumed as the `sailens/` git submodule through a Gradle composite build rather than as a fork. General feature development happens in Core Edition and arrives here as a submodule bump; this repository carries only the edition itself (`app/`) and its weights.
 
 ## License boundary
 
