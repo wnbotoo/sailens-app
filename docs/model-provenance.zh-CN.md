@@ -1,11 +1,11 @@
-[English](yolo-models.md) | **简体中文**
+[English](model-provenance.md) | **简体中文**
 
-# 本 Edition 打包的模型：来源与许可
+# 本官方发行版 打包的模型：来源与许可
 
-> 本文档满足 `YOLO_EDITION_NOTICE.md` 要求的模型记录项。**不是法律意见**；发布前应由熟悉开源
+> 本文档满足 `../DISTRIBUTION_NOTICE.zh-CN.md` 要求的模型记录项。**不是法律意见**；发布前应由熟悉开源
 > 许可证的顾问复核。
 >
-> 模型的**技术契约**（shape / 布局 / 类别顺序 / 性能红线）见 Core Edition 的 [`models.zh-CN.md`](../sailens/docs/models.zh-CN.md)。
+> 模型的**技术契约**（shape / 布局 / 类别顺序 / 性能红线）见 Sailens Android 的 [`models.zh-CN.md`](../sailens/docs/models.zh-CN.md)。
 > 本文只讲**这两个权重是什么、从哪来、什么许可**。
 
 ## 打包内容
@@ -15,8 +15,8 @@ app/src/main/assets/sem.tflite      语义可行走区域分割
 app/src/main/assets/det.tflite      障碍物检测
 ```
 
-Core Edition 的 `.gitignore` 忽略 `app/src/main/assets/*.tflite`——它不带任何权重；这里把它们
-当普通文件跟踪。正是这两个文件让这个 edition 成为 AGPL-3.0。
+Sailens Android 的 `.gitignore` 忽略 `app/src/main/assets/*.tflite`——它不带任何权重；这里把它们
+当普通文件跟踪。正是这两个文件让这个发行版 成为 AGPL-3.0。
 
 ## sem.tflite
 
@@ -67,15 +67,16 @@ Core Edition 的 `.gitignore` 忽略 `app/src/main/assets/*.tflite`——它不�
 ## 换模型时必须做的事
 
 1. 跑 `py sailens/scripts/inspect_tflite.py <path>` 对照 [`models.zh-CN.md`](../sailens/docs/models.zh-CN.md) 的契约。
-2. **人工验证类别顺序的语义**——Core Edition 的 `SemanticModelPreflight`（sailens-guidance）
+2. **人工验证类别顺序的语义**——Sailens Android 的 `SemanticModelPreflight`（sailens-guidance）
    只能校验 output 能否解析、类别数是否等于声明的 taxonomy，**校验不了类别顺序**。顺序错不会
    报错，会静默把"人行道"当"马路"讲给一个看不见的人听。用一张已知场景实测 argmax 结果再谈精度。
 3. 更新本文档的全部 10 项（含 sha256）。
-4. 构建并启动这个 edition。它声明了 Guidance required，所以 output 解析不了或类别数不对的模型
-   会在用户按下开始之前就停在 fatal configuration 屏——这就是现在的契约闸。检查本身由 Core
-   Edition 的测试覆盖：在本仓库根目录跑 `./gradlew :sailens:sailens-guidance:testDebugUnitTest`。
-5. 真机复核 Core Edition 的性能红线（`sailens/docs/architecture.zh-CN.md` §12.3）：
+4. 构建并启动这个发行版。它声明了 Guidance required，所以 output 解析不了或类别数不对的模型
+   会在用户按下开始之前就停在 fatal configuration 屏——这就是现在的契约闸。检查本身由
+   Sailens Android 的测试覆盖：在本仓库根目录跑
+   `./gradlew :sailens:sailens-guidance:testDebugUnitTest`。
+5. 真机复核 Sailens Android 的性能红线（`sailens/docs/architecture.zh-CN.md` §12.3）：
    `sem: postprocessBackend = "native_score"` 且 `outputReadTimeMs ≈ 0`；
    `det: postprocessBackend = "native_bbox_nms_float_handle"`。
-   **Core Edition 没有权重、验不了这几条，只能在这里验。**§12.3 记录了其中哪几条目前成立；那里
+   **Sailens Android 没有权重、验不了这几条，只能在这里验。**§12.3 记录了其中哪几条目前成立；那里
    已经记为不成立的，是既有的已知缺口，不是换模型造成的回归。

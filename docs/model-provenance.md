@@ -1,12 +1,12 @@
-**English** | [简体中文](yolo-models.zh-CN.md)
+**English** | [简体中文](model-provenance.zh-CN.md)
 
 # Bundled models: provenance and licenses
 
-> This document satisfies the model record requirements in `YOLO_EDITION_NOTICE.md`. **It is not
+> This document satisfies the model record requirements in `../DISTRIBUTION_NOTICE.md`. **It is not
 > legal advice**; have someone familiar with open-source licensing review it before release.
 >
 > The models' **technical contract** (shape / layout / class order / performance red lines) is in
-> Core Edition's [`models.md`](../sailens/docs/models.md). This document only covers **what these two weights are, where
+> Sailens Android's [`models.md`](../sailens/docs/models.md). This document only covers **what these two weights are, where
 > they came from, and under what license**.
 
 ## What is bundled
@@ -16,8 +16,8 @@ app/src/main/assets/sem.tflite      semantic walkable-area segmentation
 app/src/main/assets/det.tflite      obstacle detection
 ```
 
-Core Edition git-ignores `app/src/main/assets/*.tflite` because it ships zero weights; here they
-are tracked as ordinary files. They are what makes this edition AGPL-3.0.
+Sailens Android git-ignores `app/src/main/assets/*.tflite` because it ships zero weights; here they
+are tracked as ordinary files. They are what makes this official distribution AGPL-3.0.
 
 ## sem.tflite
 
@@ -72,19 +72,19 @@ now" for this problem being solved too.
 
 1. Run `py sailens/scripts/inspect_tflite.py <path>` and check it against the contract in
    [`models.md`](../sailens/docs/models.md).
-2. **Verify class channel order semantics by hand.** Core Edition's `SemanticModelPreflight`
+2. **Verify class channel order semantics by hand.** Sailens Android's `SemanticModelPreflight`
    (sailens-guidance) checks that the output parses and that its class count matches the declared
    taxonomy — **it cannot check class order**. A wrong order does not error; it will quietly call
    a sidewalk a road, out loud, to someone who cannot see it. Test the argmax output on a known
    scene before discussing accuracy.
 3. Update all ten fields in this document (including the sha256).
-4. Build and launch this edition. It declares Guidance required, so a model whose output does not
+4. Build and launch this official distribution. It declares Guidance required, so a model whose output does not
    parse or whose class count is wrong stops at the fatal configuration screen before anyone can
-   press start — that is the contract guard now. Core Edition's own suite covers the check itself:
+   press start — that is the contract guard now. Sailens Android's own suite covers the check itself:
    `./gradlew :sailens:sailens-guidance:testDebugUnitTest` from this repository's root.
-5. Re-check Core Edition's performance red lines on a device (`sailens/docs/architecture.md`
+5. Re-check Sailens Android's performance red lines on a device (`sailens/docs/architecture.md`
    §12.3): `sem: postprocessBackend = "native_score"` and `outputReadTimeMs ≈ 0`;
    `det: postprocessBackend = "native_bbox_nms_float_handle"`.
-   **Core Edition has no weights and cannot verify these — this is the only place they can be
+   **Sailens Android has no weights and cannot verify these — this is the only place they can be
    checked.** §12.3 records which of them currently hold; a line already recorded as not holding
    there is a known pre-existing gap, not a regression from the new model.

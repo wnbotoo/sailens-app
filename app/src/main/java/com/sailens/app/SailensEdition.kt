@@ -15,10 +15,10 @@ import com.sailens.vision.taxonomy.CityscapesTaxonomy
 import com.sailens.vlm.SceneDescriber
 
 /**
- * What the YOLO Edition offers.
+ * What the official Sailens distribution offers.
  *
- * Unlike Core Edition, this repository **packages its own weights**, so it promises navigation
- * assistance and declares it required (architecture.md §5.1, §5.2). If the model is missing or
+ * Unlike the Sailens Android reference host, this repository **packages its own weights**, so it
+ * promises navigation assistance and declares it required (architecture.md §5.1, §5.2). If the model is missing or
  * its class definition does not match, that is a fatal configuration state rather than a quiet
  * fallback -- a build that cannot guide anyone must say so, out loud, on a channel the user can
  * perceive.
@@ -26,7 +26,7 @@ import com.sailens.vlm.SceneDescriber
  * The Guidance check reads the packaged model's TFLite metadata tables and compares its output
  * class count against the declared taxonomy. That is still cheap (§5.2): a memory-mapped read of a
  * few hundred bytes, no compiled model, no accelerator, no inference. It matters more here than in
- * Core Edition, because this build ships the weights: a packaging mistake is caught before the
+ * the reference host, because this build ships the weights: a packaging mistake is caught before the
  * user presses start rather than after they have begun walking. What it cannot check is channel
  * *order* -- the models carry no labels, so which channel is `person` remains a manual release
  * gate (§6.2, docs/models.md).
@@ -43,8 +43,8 @@ fun sailensEditionSpec(
             if (sceneDescriber.isAvailable) null else StaticUnavailableReason.EngineUnavailable
         },
     ),
-    // The YOLO Edition packages its own weights, so it promises navigation assistance. A missing
-    // or mismatched model here is a configuration failure, not a shrug: shipping a build that
+    // The official distribution packages its own weights, so it promises navigation assistance.
+    // A missing or mismatched model here is a configuration failure, not a shrug: shipping a build that
     // silently cannot guide anyone is the outcome the capability model exists to prevent.
     expectations = CapabilityExpectations(
         guidanceRequired = true,

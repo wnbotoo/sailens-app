@@ -2,10 +2,10 @@
 
 # Official Sailens Android distribution positioning
 
-> Status: **accepted target; implementation intentionally deferred.** This repository is still named
-> `sailens-yolo` and the current application identity still represents the YOLO Edition. A separate
-> follow-up change will perform the repository/product identity migration after this documentation is
-> merged.
+> Status: **Android product identity implemented; GitHub repository rename pending.** This is the
+> first-party Sailens Android distribution. Its Android identity is already the plain
+> `com.sailens` application ID. After final validation, rename the existing GitHub repository in
+> place from `sailens-yolo` to `sailens-app`.
 
 The authoritative cross-repository decision is in Sailens Android:
 [`sailens/docs/distribution-model.md`](../sailens/docs/distribution-model.md).
@@ -23,20 +23,17 @@ The intended app-store product name is simply:
 
 This is not a second platform and not a fork of the platform. It should remain a thin host.
 
-## 2. Target identity
+## 2. Product identity
 
-| Item | Current | Accepted target |
-|---|---|---|
-| Repository | `wnbotoo/sailens-yolo` | `wnbotoo/sailens-app` |
-| Product name | Sailens YOLO Edition | **Sailens** |
-| Android namespace | `com.sailens` | `com.sailens` |
-| applicationId | `com.sailens.yolo` | `com.sailens` |
-| Platform dependency | `sailens-android` submodule | unchanged |
-| Distribution mechanism | Gradle composite build | unchanged |
-| Current licence | AGPL-3.0 | unchanged by branding alone |
-
-The repository is renamed **in place**. It is not deleted/recreated and does not get another
-fresh-root history.
+| Item | Identity |
+|---|---|
+| Repository | `wnbotoo/sailens-app` after the pending in-place rename |
+| Product name | **Sailens** |
+| Android namespace | `com.sailens` |
+| applicationId | `com.sailens` |
+| Platform dependency | `sailens-android` submodule |
+| Distribution mechanism | Gradle composite build |
+| Current licence | AGPL-3.0 |
 
 The namespace remains `com.sailens`; the product rename does not justify moving Kotlin packages.
 
@@ -74,16 +71,16 @@ the platform.
 
 ## 5. YOLO becomes provenance, not product branding
 
-The current repository name and product name expose "YOLO" because this distribution was originally
-defined around its bundled models.
+This distribution was originally defined around its bundled YOLO models, which is why the old
+repository/product identity exposed "YOLO". The Android product branding has now been migrated;
+only the GitHub repository rename remains pending.
 
-Under the accepted positioning, model architecture is an implementation/provenance detail rather
-than the product identity. After the migration:
+Model architecture is an implementation/provenance detail rather than the product identity:
 
 - users see **Sailens**, not "YOLO Edition";
 - YOLO/Ultralytics names remain in model provenance, attribution, compatibility and licence records;
-- the current `YOLO_EDITION_NOTICE*` material is reorganised into model/distribution notices rather
-  than discarded;
+- model/distribution obligations are recorded in `DISTRIBUTION_NOTICE.md` and
+  `docs/model-provenance.md`;
 - bundled model obligations remain in force even though "YOLO" leaves the product name.
 
 This matters because the official model bundle can change in the future without forcing a product
@@ -133,19 +130,18 @@ provenance documents remain release-critical.
 If the official model bundle changes later, the distribution licence may be re-evaluated separately
 with appropriate legal review.
 
-## 8. Planned follow-up implementation
+## 8. Implemented identity boundary
 
-After this documentation lands, a separate positioning change will:
+The distribution uses:
 
-1. rename the repository in place from `sailens-yolo` to `sailens-app`;
-2. change `applicationId` from `com.sailens.yolo` to `com.sailens`;
-3. keep namespace `com.sailens`;
-4. change the user-facing product name to **Sailens**;
-5. update `APP_SOURCE_URL`, About identity and identity tests;
-6. rename/reframe YOLO Edition notices as model provenance/distribution notices;
-7. update README/AGENTS/build/release/store references to the new repository identity;
-8. verify debug/release build and device installation;
-9. verify it can coexist with the Sailens Android reference host after that host moves to
-   `com.sailens.reference`.
+```text
+repository:    wnbotoo/sailens-app
+product:       Sailens
+namespace:     com.sailens
+applicationId: com.sailens
+source:        https://github.com/wnbotoo/sailens-app
+```
 
-No platform architecture change is required for this migration.
+The Sailens Android reference host uses `com.sailens.reference`, so the two applications remain
+installable side by side. The platform architecture, package names, composite-build mechanism and
+capability model are unchanged by this product-positioning migration.
