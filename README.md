@@ -8,6 +8,26 @@ over the Core Edition libraries and it packages the model weights that Core Edit
 does not ship. See [YOLO_EDITION_NOTICE.md](YOLO_EDITION_NOTICE.md) for the licence boundary and
 the trademark disclaimer.
 
+## Accepted target positioning
+
+This repository is becoming the **official first-party Sailens Android distribution**. The
+long-term app-store product name is **Sailens**; "YOLO" becomes model provenance rather than product
+branding.
+
+The accepted follow-up identity is:
+
+```text
+repository:    wnbotoo/sailens-app   (rename this repository in place)
+namespace:     com.sailens           (unchanged)
+applicationId: com.sailens
+product name:  Sailens
+```
+
+The current repository/application identity is intentionally left unchanged in this documentation
+change. See [docs/official-distribution.md](docs/official-distribution.md) for the staged migration,
+ownership boundary and release policy. The cross-repository decision is
+[`sailens/docs/distribution-model.md`](sailens/docs/distribution-model.md).
+
 ## Structure
 
 ```text
