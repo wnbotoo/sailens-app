@@ -1,53 +1,57 @@
-# Sailens — YOLO Edition
+# Sailens
 
-Navigation assistance for blind and low-vision users: a camera-fed perception pipeline that turns
-the scene ahead into speech and haptics.
+Navigation assistance for blind and low-vision users: a camera-fed perception pipeline turns the
+scene ahead into speech and haptics.
 
-This repository is the **YOLO Edition**, distributed under **AGPL-3.0**. It is a thin application
-over the Core Edition libraries and it packages the model weights that Core Edition deliberately
-does not ship. See [YOLO_EDITION_NOTICE.md](YOLO_EDITION_NOTICE.md) for the licence boundary and
-the trademark disclaimer.
+This repository is the **official first-party Sailens Android distribution**. It is the application
+intended for end users and app-store releases under the product name **Sailens**.
 
-## Accepted target positioning
+The reusable Android platform lives in
+[`wnbotoo/sailens-android`](https://github.com/wnbotoo/sailens-android) and is consumed here as the
+`sailens/` git submodule through a Gradle composite build. This repository stays thin: it owns the
+product host and identity, official model bundle, capability expectations, release configuration and
+distribution-specific notices.
 
-This repository is becoming the **official first-party Sailens Android distribution**. The
-long-term app-store product name is **Sailens**; "YOLO" becomes model provenance rather than product
-branding.
+**Current distribution licence: AGPL-3.0.** The platform remains Apache-2.0; the stronger
+distribution licence comes from the current bundled-model/licensing choices. See
+[`DISTRIBUTION_NOTICE.md`](DISTRIBUTION_NOTICE.md) and
+[`docs/model-provenance.md`](docs/model-provenance.md).
 
-The accepted follow-up identity is:
+## Identity
 
 ```text
-repository:    wnbotoo/sailens-app   (rename this repository in place)
-namespace:     com.sailens           (unchanged)
-applicationId: com.sailens
+repository:    wnbotoo/sailens-app
 product name:  Sailens
+namespace:     com.sailens
+applicationId: com.sailens
 ```
 
-The current repository/application identity is intentionally left unchanged in this documentation
-change. See [docs/official-distribution.md](docs/official-distribution.md) for the staged migration,
-ownership boundary and release policy. The cross-repository decision is
-[`sailens/docs/distribution-model.md`](sailens/docs/distribution-model.md).
+The Sailens Android reference host uses `applicationId = "com.sailens.reference"`, so both can be
+installed side by side.
 
 ## Structure
 
 ```text
-app/       the edition: host wiring, identity, expectations, model weights
-docs/      provenance and licences of the bundled weights (yolo-models.md)
-sailens/   Core Edition (wnbotoo/sailens-android), as a git submodule
+app/                         thin official host, identity, expectations and model weights
+app/src/main/assets/         sem.tflite, det.tflite
+docs/model-provenance.md     bundled-model provenance and licence records
+DISTRIBUTION_NOTICE.md       distribution/licence boundary and release-source requirements
+sailens/                     Sailens Android, pinned as an exact git submodule commit
+settings.gradle.kts          includeBuild("sailens") + Sailens Android's version catalog
 ```
 
-Core Edition is consumed through a Gradle composite build, not a fork. The submodule commit is the
-version boundary — there is no Maven publication and no artifact version.
+The submodule commit is the platform version boundary for a product build. The `sailens-*`
+libraries are not published to Maven in the current phase.
 
 ## Build
 
 ```bash
-git clone --recurse-submodules https://github.com/wnbotoo/sailens-yolo.git
-cd sailens-yolo
+git clone --recurse-submodules https://github.com/wnbotoo/sailens-app.git
+cd sailens-app
 ./gradlew :app:assembleDebug
 ```
 
-If you cloned without `--recurse-submodules`:
+If cloned without submodules:
 
 ```bash
 git submodule update --init
@@ -55,11 +59,27 @@ git submodule update --init
 
 `ANDROID_HOME` must point at an Android SDK. The build produces an arm64-v8a APK.
 
-## Relationship to Core Edition
+## Platform relationship
 
-Platform work — capture, runtime, vision, guidance, output, the presentation shell — happens in
-[Core Edition](https://github.com/wnbotoo/sailens-android) and arrives here as a submodule bump.
-This repository owns what is genuinely its own: the weights, the application identity, and the
-declaration that navigation assistance is required rather than optional.
+Reusable work — capture, runtime, vision, Guidance, Describe, output, accessibility and the
+presentation shell — belongs in Sailens Android and arrives here through an exact submodule bump
+after the appropriate licence review.
 
-Code does not flow back the other way without a licence review.
+This repository owns only distribution choices: bundled models, product identity, required
+capabilities, supported defaults and release material. It must not grow a parallel implementation
+of the Sailens platform.
+
+The current official distribution declares **Guidance required**. Missing or incompatible packaged
+Guidance models are therefore static configuration failures rather than a legal zero-pipeline state.
+
+## Model provenance
+
+"YOLO" is not part of the Sailens product brand. It appears only where technically and legally
+relevant to the current bundled models. Full hashes, upstream sources, model/dataset licences and
+release gates are in [`docs/model-provenance.md`](docs/model-provenance.md).
+
+## Product/distribution contract
+
+See [`docs/official-distribution.md`](docs/official-distribution.md). The authoritative
+cross-repository policy is also present in the pinned platform checkout at
+[`sailens/docs/distribution-model.md`](sailens/docs/distribution-model.md).
