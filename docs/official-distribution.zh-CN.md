@@ -2,8 +2,9 @@
 
 # Sailens 官方 Android 发行版定位
 
-> 状态：**产品 identity 已实施。**本仓库是一方官方 Sailens Android 发行版；GitHub 仓库名为
-> `sailens-app`，Android 产品使用 plain `com.sailens` applicationId。
+> 状态：**Android 产品 identity 已实施；GitHub 仓库 rename 待最终验证后执行。**本仓库是一方
+> 官方 Sailens Android 发行版，Android 产品已经使用 plain `com.sailens` applicationId。
+> 最终验证完成后，再把现有 GitHub 仓库从 `sailens-yolo` 原地 rename 为 `sailens-app`。
 
 跨仓库的权威决策见 Sailens Android：
 [`sailens/docs/distribution-model.zh-CN.md`](../sailens/docs/distribution-model.zh-CN.md)。
@@ -21,11 +22,11 @@ Sailens Android（`wnbotoo/sailens-android`）实现可复用 capability；本�
 
 本仓库不是第二个平台，也不是平台 fork，而应一直保持为薄 host。
 
-## 2. 目标 identity
+## 2. 产品 identity
 
 | 项目 | Identity |
 |---|---|
-| 仓库 | `wnbotoo/sailens-app` |
+| 仓库 | 完成待执行的原地 rename 后为 `wnbotoo/sailens-app` |
 | 产品名 | **Sailens** |
 | Android namespace | `com.sailens` |
 | applicationId | `com.sailens` |
@@ -68,10 +69,10 @@ Android 实现，再通过 submodule bump 进入这里。不要让官方 App 长
 
 ## 5. YOLO 降级为 provenance，不再是产品 branding
 
-当前仓库名与产品名包含 “YOLO”，因为这个发行版最初围绕所打包模型来定义。
+这个发行版最初围绕打包的 YOLO 模型定义，因此旧仓库/产品 identity 曾经包含 “YOLO”。
+Android 产品 branding 已完成迁移；现在只剩 GitHub 仓库 rename 尚未执行。
 
-新定位下，model architecture 是 implementation/provenance detail，而不是产品 identity。
-migration 完成后：
+新定位下，model architecture 是 implementation/provenance detail，而不是产品 identity：
 
 - 用户看到的是 **Sailens**，不是 “YOLO Edition”；
 - YOLO/Ultralytics 名称继续存在于 model provenance、attribution、compatibility 与 licence 记录；
