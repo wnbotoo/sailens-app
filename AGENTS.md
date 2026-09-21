@@ -5,6 +5,29 @@ Repository: wnbotoo/sailens-yolo      Edition: YOLO Edition   License: AGPL-3.0
 Upstream:   wnbotoo/sailens-android   Edition: Core Edition   License: Apache-2.0
 ```
 
+## Accepted product positioning
+
+This repository is the current home of the **official first-party Sailens Android distribution**.
+Its next identity migration is already decided but is intentionally not implemented by the docs
+change:
+
+```text
+repository:    wnbotoo/sailens-yolo  -> wnbotoo/sailens-app
+product:       Sailens YOLO Edition  -> Sailens
+namespace:     com.sailens           -> com.sailens
+applicationId: com.sailens.yolo      -> com.sailens
+```
+
+Rename this repository in place; do not delete/recreate or fresh-root it again. "YOLO" remains in
+model provenance/licence material, not in the long-term product brand. The platform/reference host
+remains `wnbotoo/sailens-android` and is planned to use
+`applicationId = "com.sailens.reference"`.
+
+Do not publish the `sailens-*` modules to Maven as part of this positioning work. The official app
+continues to consume an exact Sailens Android main commit through the submodule + Gradle composite
+build. See `docs/official-distribution.md` and
+`sailens/docs/distribution-model.md`.
+
 **This repository is no longer a fork.** It is a thin application over Core Edition's
 `sailens-*` libraries, consumed through a Gradle composite build. Core Edition is pinned as the
 `sailens/` git submodule, and that submodule commit is the version boundary — nothing is published
