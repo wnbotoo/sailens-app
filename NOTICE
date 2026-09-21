@@ -1,40 +1,46 @@
-Sailens YOLO Edition
+Sailens
 
-This repository is a downstream distribution of the Sailens Core Edition:
+Official Sailens Android distribution
+-------------------------------------
+Repository: https://github.com/wnbotoo/sailens-app
+Current distribution license: AGPL-3.0 (see LICENSE)
+
+Sailens Android platform
+------------------------
+The reusable platform is maintained separately:
 
     https://github.com/wnbotoo/sailens-android
 
-Core Edition code
------------------
 Copyright 2026 The Sailens Authors
 Licensed under the Apache License, Version 2.0.
 
-Core Edition is included unmodified, as the git submodule at sailens/, and is
-built into this edition through a Gradle composite build. Apache-2.0 permits
-that inclusion in an AGPL-3.0 distribution; the Core Edition repository remains
-Apache-2.0 and is unaffected by this edition's terms.
+Sailens Android is included as the git submodule at sailens/ and is built into
+this application through a Gradle composite build. The platform remains
+Apache-2.0 and ships no model weights.
 
-This repository's own code is the thin host application under app/: its
-identity, the declaration that navigation assistance is required, and the
-wiring that composes Core Edition's libraries.
+Distribution and model boundary
+-------------------------------
+This repository's own code is the thin official application host plus product
+identity, capability expectations and release wiring. It also bundles the model
+weights used by the official distribution.
 
-This edition
-------------
-This edition adds YOLO26 model weights, which are AGPL-3.0-covered. The combined
-work distributed from this repository is therefore licensed under AGPL-3.0 (see
-LICENSE). Distributing a build from here carries AGPL-3.0 obligations, including
-providing complete corresponding source for that build -- which includes the
-exact Core Edition commit the sailens/ submodule pins.
+Under the current bundled-model choices, the distributed application is
+released under AGPL-3.0. Distribution therefore carries AGPL-3.0 obligations,
+including complete corresponding source for the exact build; that source
+includes the exact Sailens Android commit pinned at sailens/.
 
-Model weights carry their own licenses and training dataset terms, independent of
-any code license. The bundled semantic segmentation model is trained on
-Cityscapes, which is restricted to NON-COMMERCIAL use. See docs/yolo-models.md
-for full provenance of both models.
+Model files carry their own upstream and training-dataset terms independently
+of the platform code licence. The bundled semantic segmentation model is trained
+on Cityscapes, whose terms restrict commercial use. See
+docs/model-provenance.md for the complete current records.
 
-Not affiliated with, endorsed by, or sponsored by Ultralytics. "YOLO" is used
-descriptively to identify the models this edition integrates.
+The current bundle includes YOLO-family model material. Sailens is not
+affiliated with, endorsed by, or sponsored by Ultralytics. "YOLO" is used only
+descriptively in model provenance.
 
 Third-party components
 ----------------------
-Listed in the app's open-source licenses screen (see
+Listed in the application's open-source licences screen (see
 sailens/sailens-shell/src/main/java/com/sailens/shell/about/OssLibrary.kt).
+
+See DISTRIBUTION_NOTICE.md for release-source and model-notice requirements.
