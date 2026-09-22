@@ -18,7 +18,7 @@ jobs:
   build:
     name: build
     runs-on: ubuntu-24.04
-    timeout-minutes: 25
+    timeout-minutes: 30
 
     steps:
       - name: Checkout
@@ -51,3 +51,12 @@ jobs:
 
       - name: Build and lint
         run: ./gradlew build lint --stacktrace
+
+      - name: Verify release signing path
+        shell: bash
+        run: |
+          set -euo pipefail
+          keystore="$RUNNER_TEMP/sailens-ci-upload.jks"
+          keytool -genkeypair -noprompt -storetype JKS -keystore "$keystore" -storepass ci-password -keypass ci-password -alias ci-upload -keyalg RSA -keysize 2048 -validity 3650 -dname "CN=Sailens CI, O=Sailens, C=US"
+          SAILENS_UPLOAD_KEYSTORE="$keystore" SAILENS_UPLOAD_STORE_PASSWORD=ci-password SAILENS_UPLOAD_KEY_ALIAS=ci-upload SAILENS_UPLOAD_KEY_PASSWORD=ci-password ./gradlew :app:bundleRelease -Psailens.versionName=0.0.1 -Psailens.versionCode=1 --no-configuration-cache --stacktrace
+          jarsigner -verify app/build/outputs/bundle/release/app-release.aab
