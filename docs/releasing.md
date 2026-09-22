@@ -1,8 +1,9 @@
 # Releasing Sailens
 
 The current official distribution channel is **GitHub Releases**. A release tag produces a signed,
-installable APK that users can download and install directly. Google Play publishing is currently
-**pending** and is deliberately not part of the tag workflow.
+installable APK in a **Draft Release**; the exact APK is made public only after the physical-device
+gate passes. Google Play publishing is currently **pending** and is deliberately not part of the tag
+workflow.
 
 ## Signing identity
 
