@@ -17,64 +17,40 @@ installations.
 For future Google Play distribution, keep the same app signing identity across channels: configure
 Play App Signing with a copy of this app signing key, then create a **separate upload key** for
 signing AABs sent to Play. Do not use the GitHub app signing key as the routine Play upload key.
+The production signing identity is pinned in `release/app-signing-certificate.sha256`:
 
-## One-time GitHub signing setup
+`0d364c8aace36fce5c345b3e88857080c4fb0c8ffc6482d3059ee88abf67e499`
 
-Preferred path: clone/update the repository on the machine where you want to create and retain the
-private signing key, then run:
+The tag workflow verifies both the configured PKCS12 secret and the built APK against this
+fingerprint. A mismatch stops the release before any artifact is exposed publicly.
+
+
+## Signing key and GitHub secrets
+
+The production PKCS12 key has already been created and its public certificate fingerprint is now
+part of the repository contract. **Do not generate a replacement key.** Keep at least one offline
+backup of `~/.sailens/signing/sailens-app-signing.p12` and store the password separately.
+
+If the GitHub Actions signing secrets ever need to be refreshed, restore/use the pinned PKCS12 and
+run from WSL/Linux:
 
 ```bash
 ./scripts/setup-github-signing.sh
 ```
 
-The script:
+The helper verifies the local certificate against `release/app-signing-certificate.sha256` before
+it is allowed to update any secret. If the local PKCS12 is missing, it fails and tells the operator
+to restore the offline backup rather than silently creating a new signing identity.
 
-- creates (or explicitly reuses) `~/.sailens/signing/sailens-app-signing.p12` as a **PKCS12** keystore by default;
-- uses a 4096-bit RSA key with a 10,000-day validity period;
-- asks for one signing password with hidden terminal input and uses it for both the PKCS12 store and private key, matching Android signing guidance;
-- uses Java `keytool` environment-password inputs instead of passing passwords as command-line
-  arguments;
-- prints the public signing-certificate SHA-256;
-- asks again before writing anything to GitHub;
-- uses `gh secret set` to create/update the four repository Actions secrets;
-- verifies only the resulting secret **names**. GitHub does not expose secret values back to the
-  script.
-
-Prerequisites:
-
-```text
-keytool   JDK tool
-python3
-gh        authenticated with GitHub
-```
-
-If needed, authenticate first with:
-
-```bash
-gh auth login
-```
-
-The script configures these repository secrets:
+The repository secrets are:
 
 - `SAILENS_APP_SIGNING_KEYSTORE_BASE64`
 - `SAILENS_APP_SIGNING_STORE_PASSWORD`
 - `SAILENS_APP_SIGNING_KEY_ALIAS`
 - `SAILENS_APP_SIGNING_KEY_PASSWORD`
 
-PKCS12 is the current Java default and Oracle-recommended keystore format; the helper uses it explicitly so the release path does not depend on JDK defaults. The private keystore and passwords must never be committed. **Before the first public release,
-create an offline backup of the keystore and store its passwords separately.** The public
-signing-certificate SHA-256 is recorded in every `release-manifest.json`; retain that fingerprint
-when configuring future Play App Signing.
-
-To use a different local key directory, repository, keystore path or alias, set the corresponding
-environment variable before running the script:
-
-```text
-SAILENS_SIGNING_DIR
-SAILENS_GITHUB_REPOSITORY
-SAILENS_APP_SIGNING_KEYSTORE_PATH
-SAILENS_APP_SIGNING_KEY_ALIAS_VALUE
-```
+The private key and passwords must never be committed or pasted into issues, PRs, chat, logs, or
+release notes.
 
 ## Version contract
 
@@ -102,30 +78,30 @@ v2.0.0   -> versionCode 2000000
 
 A release tag must point to a commit reachable from `origin/main`.
 
-## Pre-tag release gate
 
-Run the gate from a clean, up-to-date `main` checkout with exactly one authorized physical Android device connected:
+## Before creating a release tag
 
-```bash
-./scripts/run-release-gate.sh v1.0.0
-```
+Before tagging:
 
-The script uses the real local PKCS12 key and performs the machine-verifiable checks: exact `main`,
-distribution/submodule/model contracts, pinned signing identity, versioned minified APK build, APK
-signature, API/ABI floor, install/version identity, launcher/process survival, and common JNI/native
-fatal patterns from logcat.
+- `main` CI must be green;
+- the production PKCS12 must have an offline backup;
+- model provenance and the Cityscapes non-commercial restriction must have been reviewed for the
+  intended distribution;
+- known-scene evidence for the exact bundled model hashes must still support the expected semantic
+  channel/class meanings;
+- there must be an authorized physical arm64 Android device available for the exact-artifact gate.
 
-It then requires explicit `PASS` confirmation for evidence ADB cannot honestly infer: first-run and
-Guidance startup behavior, retained known-scene semantic channel-order evidence, a two-minute real
-camera sem+det Guidance session, audible TTS/TalkBack, physical haptics, current performance/backend
-evidence, and the Cityscapes non-commercial distribution constraint.
+Do not treat CI's disposable signing-key smoke as production-device evidence.
 
-Evidence is written under `dist/release-gate/<tag>-<commit>/` and is intentionally git-ignored.
-This packaging/device gate does **not** replace the broader target-user and Phase A guidance
-validation tracked in the pinned Sailens Android documentation.
+
 ## Publishing a GitHub release
 
-After the gate is complete:
+Release is deliberately two-stage so the APK tested on the physical device is the exact APK users
+will download.
+
+### 1. Create the tag and Draft Release
+
+From the intended `main` commit:
 
 ```bash
 git switch main
@@ -136,22 +112,63 @@ git push origin v1.0.0
 
 The `Release` workflow then:
 
-1. checks out the tagged commit and exact `sailens/` submodule;
-2. verifies the tag format, that the commit belongs to `main`, the distribution contract and model
-   hashes;
-3. builds/tests/lints a minified release APK signed with the long-lived app signing key;
-4. verifies the APK with Android `apksigner` and records the signing-certificate SHA-256;
-5. creates `release-manifest.json` with the product commit, exact Sailens Android commit, model
-   hashes/embedded exporter metadata, APK hash and signing fingerprint;
-6. creates a combined corresponding-source archive containing this exact Sailens app tag plus the
-   exact Sailens Android source pinned at `sailens/`;
-7. creates a draft GitHub Release containing:
+1. verifies the tag belongs to `main` and checks the distribution/model contracts;
+2. materializes the PKCS12 secret and verifies its certificate fingerprint against the pinned
+   production signing identity;
+3. builds/tests/lints the minified release APK;
+4. verifies the built APK signer against the same pinned identity;
+5. creates `release-manifest.json` with product/platform/model/APK hashes and signer fingerprint;
+6. creates the combined corresponding-source archive;
+7. creates or updates a **Draft GitHub Release** containing:
    - `sailens-VERSION.apk`
    - `release-manifest.json`
    - `sailens-VERSION-source.tar.gz`
-8. publishes the GitHub Release only after all artifacts have been created successfully.
 
-No Google Play API call is made.
+The workflow intentionally stops while the release is still private/draft.
+
+### 2. Gate the exact Draft APK on a physical device
+
+On the Windows development machine, with exactly one authorized physical Android device connected:
+
+```powershell
+.\scripts\run-release-gate.ps1 v1.0.0
+```
+
+The gate downloads the Draft assets with `gh` and verifies the tag/manifest/source commit, artifact
+hashes and signer before installing anything. It then checks API/ABI, installs the exact Draft APK,
+checks the installed version, launches `com.sailens`, and retains install/start/logcat/crash
+evidence under:
+
+```text
+dist/release-gate/<tag>-<commit>/
+```
+
+ADB cannot truthfully prove perception semantics, audible speech, physical vibration, or whether a
+real scene was interpreted safely, so the script requires explicit `PASS` confirmation for:
+
+- first-run/camera permission and required-Guidance startup;
+- known-scene semantic channel/class meaning for the exact model hashes;
+- at least two minutes of real camera -> sem + det -> Guidance operation;
+- actual TTS/TalkBack output;
+- actual haptic output;
+- no material performance/backend regression in current same-commit evidence;
+- the current model/licence constraints, including Cityscapes non-commercial use.
+
+It also fails on a dead app process, crash-buffer evidence for `com.sailens`, or common
+JNI/native fatal patterns.
+
+This packaging/device gate does **not** replace the broader target-user and Phase A guidance
+validation tracked in Sailens Android.
+
+### 3. Publish only after the exact-artifact gate passes
+
+After reviewing and retaining the generated evidence:
+
+```bash
+gh release edit v1.0.0 --repo wnbotoo/sailens-app --draft=false
+```
+
+Until that command runs, the tagged release stays Draft and is not the public download.
 
 ## Installing and updating the APK
 
