@@ -59,7 +59,7 @@ Sailens 而消失。
 1. 模型名称
 2. 模型版本
 3. 上游项目
-4. 下载来源
+4. 上游来源 / derivation 来源（若直接下载则记录精确 URL；若本地产生则记录 canonical source checkpoint 与 export metadata/recipe）
 5. 代码 licence
 6. 权重 licence
 7. 训练数据集 licence（若已知）
