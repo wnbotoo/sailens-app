@@ -20,10 +20,12 @@ Sailens Android 的 `.gitignore` 忽略 `app/src/main/assets/*.tflite`——它�
 
 ## Provenance 审计状态
 
-2026-09-22 的发布审计把**源 checkpoint provenance**与**导出产物 provenance**明确分开：
+2026-09-22 的发布审计把“记录模型 identity 对应的**官方 canonical checkpoint**”与**导出产物 provenance**明确分开：
 
-- **源 checkpoint 已确认。** Ultralytics 在官方 `ultralytics/assets` `v8.4.0` release
-  中发布了 `yolo26n.pt` 与 `yolo26n-sem.pt`；下表记录精确 URL 与 SHA-256。
+- **官方 canonical checkpoint 已确认。** Ultralytics 在官方 `ultralytics/assets` `v8.4.0`
+  release 中发布了 `yolo26n.pt` 与 `yolo26n-sem.pt`；下表记录这些模型 identity 对应的精确
+  URL 与 SHA-256。但这只能确认官方 canonical 权重，**不能单独证明**当前打包 TFLite 就是由
+  这些 exact checkpoint bytes 导出。
 - **当前打包 TFLite 的导出链仍不可复现。** 仓库历史保留了 TFLite 文件、hash、文件名与技术
   契约，但没有保留生成这些精确 bytes 所使用的 `ultralytics` / `onnx2tf` /
   TensorFlow 版本和完整 export invocation。
@@ -44,12 +46,12 @@ Sailens Android 的 `.gitignore` 忽略 `app/src/main/assets/*.tflite`——它�
 | 原始文件名 | `yolo26n-sem_float16.tflite` |
 | sha256 | `69e240a9b7ba81b83cef1ffc0bac77698a47a37544c7517259b9accd599ab4f5` |
 | 上游项目 | Ultralytics YOLO26 |
-| 源 checkpoint | `yolo26n-sem.pt` |
-| 源 checkpoint release | `ultralytics/assets` `v8.4.0` |
-| 源 checkpoint URL | https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26n-sem.pt |
-| 源 checkpoint sha256 | `f3f293cca764de1f93044030d8d5612de9c5ffbf37c9c8ea1b69418b73038999` |
+| 官方 canonical checkpoint | `yolo26n-sem.pt` |
+| Canonical checkpoint release | `ultralytics/assets` `v8.4.0` |
+| Canonical checkpoint URL | https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26n-sem.pt |
+| Canonical checkpoint sha256 | `f3f293cca764de1f93044030d8d5612de9c5ffbf37c9c8ea1b69418b73038999` |
 | 当前 TFLite 下载来源 | ⚠️ **未确认** — 在本次检查的公开 `ultralytics/yolo-flutter-app` release assets 中没有发现精确匹配 |
-| 模型版本 / release tag | 源 checkpoint：`ultralytics/assets v8.4.0`；当前 TFLite export 版本：⚠️ **未确认** |
+| 模型版本 / release tag | Canonical checkpoint：`ultralytics/assets v8.4.0`；当前 TFLite 的 exact derivation/export 版本：⚠️ **未确认** |
 | 代码 license | AGPL-3.0（Ultralytics） |
 | 权重 license | AGPL-3.0（按 Ultralytics 的主张；权重是否适用 copyleft 在业界有争议，本仓库按其主张从严处理） |
 | 训练数据集 | Cityscapes（19 类 trainId） |
@@ -68,12 +70,12 @@ Sailens Android 的 `.gitignore` 忽略 `app/src/main/assets/*.tflite`——它�
 | 原始文件名 | `yolo26n_float16.tflite` |
 | sha256 | `5950fac5e1a92adb17ad907b3925943c5c9dd29d59b0cbc1391efb4eb72740cf` |
 | 上游项目 | Ultralytics YOLO26 |
-| 源 checkpoint | `yolo26n.pt` |
-| 源 checkpoint release | `ultralytics/assets` `v8.4.0` |
-| 源 checkpoint URL | https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26n.pt |
-| 源 checkpoint sha256 | `9b09cc8bf347f0fc8a5f7657480587f25db09b34bf33b0652110fb03a8ad4fef` |
+| 官方 canonical checkpoint | `yolo26n.pt` |
+| Canonical checkpoint release | `ultralytics/assets` `v8.4.0` |
+| Canonical checkpoint URL | https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26n.pt |
+| Canonical checkpoint sha256 | `9b09cc8bf347f0fc8a5f7657480587f25db09b34bf33b0652110fb03a8ad4fef` |
 | 当前 TFLite 下载来源 | ⚠️ **未确认** — 在本次检查的公开 `ultralytics/yolo-flutter-app` release assets 中没有发现精确匹配 |
-| 模型版本 / release tag | 源 checkpoint：`ultralytics/assets v8.4.0`；当前 TFLite export 版本：⚠️ **未确认** |
+| 模型版本 / release tag | Canonical checkpoint：`ultralytics/assets v8.4.0`；当前 TFLite 的 exact derivation/export 版本：⚠️ **未确认** |
 | 代码 license | AGPL-3.0（Ultralytics） |
 | 权重 license | AGPL-3.0（同上） |
 | 训练数据集 | COCO（80 类） |
