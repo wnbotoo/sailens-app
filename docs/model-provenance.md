@@ -19,6 +19,30 @@ app/src/main/assets/det.tflite      obstacle detection
 Sailens Android git-ignores `app/src/main/assets/*.tflite` because it ships zero weights; here they
 are tracked as ordinary files. They are what makes this official distribution AGPL-3.0.
 
+## Provenance audit status
+
+The 2026-09-22 release audit separates **source-checkpoint provenance** from **export-artifact
+provenance**:
+
+- **Source checkpoints are verified.** Ultralytics publishes `yolo26n.pt` and
+  `yolo26n-sem.pt` from the official `ultralytics/assets` `v8.4.0` release. The exact
+  checkpoint URLs and SHA-256 values are recorded below.
+- **The bundled TFLite export chain is not yet reproducible.** Repository history retained the
+  bundled TFLite files, their hashes, filenames and technical contracts, but not the exact
+  `ultralytics` / `onnx2tf` / TensorFlow versions or the complete export invocation that
+  produced these bytes.
+- The public `ultralytics/yolo-flutter-app` release assets inspected during this audit, including
+  `v0.2.0` and `v0.3.5`, do not provide an exact filename/hash/size match for either bundled
+  FP16 TFLite. Those releases are therefore **context, not the download source for these exact
+  artifacts**.
+- **Public v1 release remains blocked on this provenance gap.** Before release, either reproduce
+  the current TFLite SHA-256 values from pinned source checkpoints and a pinned export toolchain, or
+  replace the bundled models with newly generated, fully pinned artifacts and repeat the semantic
+  channel-order and device runtime/performance release gates.
+
+Do not turn a nearby upstream release into an exact source claim merely because its model family or
+technical contract looks compatible.
+
 ## sem.tflite
 
 | Field | Value |
@@ -27,8 +51,12 @@ are tracked as ordinary files. They are what makes this official distribution AG
 | Original file name | `yolo26n-sem_float16.tflite` |
 | sha256 | `69e240a9b7ba81b83cef1ffc0bac77698a47a37544c7517259b9accd599ab4f5` |
 | Upstream project | Ultralytics YOLO26 |
-| Download source | ⚠️ **exact release URL TBD** — from the canonical Android assets in `ultralytics/yolo-flutter-app` releases (v0.3.5 release notes mention "full YOLO26 semantic segmentation support"; the Android semantic assets trace back to v0.2.0 canonical assets) |
-| Model version / release tag | ⚠️ **TBD** |
+| Source checkpoint | `yolo26n-sem.pt` |
+| Source checkpoint release | `ultralytics/assets` `v8.4.0` |
+| Source checkpoint URL | https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26n-sem.pt |
+| Source checkpoint sha256 | `f3f293cca764de1f93044030d8d5612de9c5ffbf37c9c8ea1b69418b73038999` |
+| Bundled TFLite download source | ⚠️ **Unresolved** — no exact match was found in the inspected public `ultralytics/yolo-flutter-app` release assets |
+| Model version / release tag | Source checkpoint: `ultralytics/assets v8.4.0`; bundled TFLite export version: ⚠️ **unresolved** |
 | Code license | AGPL-3.0 (Ultralytics) |
 | Weights license | AGPL-3.0 (per Ultralytics' position; whether copyleft applies to weights is contested in the industry — this repository takes the strict reading of their claim) |
 | Training dataset | Cityscapes (19 trainId classes) |
@@ -47,8 +75,12 @@ are tracked as ordinary files. They are what makes this official distribution AG
 | Original file name | `yolo26n_float16.tflite` |
 | sha256 | `5950fac5e1a92adb17ad907b3925943c5c9dd29d59b0cbc1391efb4eb72740cf` |
 | Upstream project | Ultralytics YOLO26 |
-| Download source | ⚠️ **exact release URL TBD** |
-| Model version / release tag | ⚠️ **TBD** |
+| Source checkpoint | `yolo26n.pt` |
+| Source checkpoint release | `ultralytics/assets` `v8.4.0` |
+| Source checkpoint URL | https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26n.pt |
+| Source checkpoint sha256 | `9b09cc8bf347f0fc8a5f7657480587f25db09b34bf33b0652110fb03a8ad4fef` |
+| Bundled TFLite download source | ⚠️ **Unresolved** — no exact match was found in the inspected public `ultralytics/yolo-flutter-app` release assets |
+| Model version / release tag | Source checkpoint: `ultralytics/assets v8.4.0`; bundled TFLite export version: ⚠️ **unresolved** |
 | Code license | AGPL-3.0 (Ultralytics) |
 | Weights license | AGPL-3.0 (as above) |
 | Training dataset | COCO (80 classes) |
