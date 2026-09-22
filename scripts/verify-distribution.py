@@ -16,6 +16,8 @@ MODELS = {
     "sem.tflite": ROOT / "app/src/main/assets/sem.tflite",
     "det.tflite": ROOT / "app/src/main/assets/det.tflite",
 }
+SIGNING_CERT_PATH = ROOT / "release/app-signing-certificate.sha256"
+EXPECTED_SIGNING_CERT_SHA256 = "0d364c8aace36fce5c345b3e88857080c4fb0c8ffc6482d3059ee88abf67e499"
 
 
 def read(path: str) -> str:
@@ -195,6 +197,16 @@ def main() -> int:
         "Official distribution APP_SOURCE_URL must point to sailens-app.",
     )
 
+    if not SIGNING_CERT_PATH.is_file():
+        errors.append("Pinned app-signing certificate fingerprint is missing.")
+    else:
+        signing_cert = SIGNING_CERT_PATH.read_text(encoding="utf-8").strip().lower()
+        if signing_cert != EXPECTED_SIGNING_CERT_SHA256:
+            errors.append(
+                "Pinned app-signing certificate fingerprint changed unexpectedly "
+                f"({signing_cert} != {EXPECTED_SIGNING_CERT_SHA256})."
+            )
+
     edition = read("app/src/main/java/com/sailens/app/SailensEdition.kt")
     require_pattern(
         errors,
@@ -226,6 +238,7 @@ def main() -> int:
                     f"{model_name} embedded Ultralytics metadata: "
                     f"{json.dumps(selected_metadata, sort_keys=True)}"
                 )
+    print(f"App-signing certificate SHA-256: {EXPECTED_SIGNING_CERT_SHA256}")
     print("Sailens distribution contract verification passed.")
     return 0
 
