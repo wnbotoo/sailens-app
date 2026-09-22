@@ -86,7 +86,7 @@ cross-repository policy is also present in the pinned platform checkout at
 
 ## Releases
 
-Google Play releases use signed semantic-version tags such as `v1.0.0`. The release workflow
+Google Play releases use semantic-version tags such as `v1.0.0`. The release workflow
 builds a signed AAB, records the exact platform/model/artifact hashes in a release manifest, creates
 a GitHub Release, and uploads the same AAB to the Google Play **Internal testing** track. Promotion
 beyond Internal testing is intentionally manual.
