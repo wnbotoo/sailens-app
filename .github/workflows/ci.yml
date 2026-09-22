@@ -58,8 +58,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          keystore="$RUNNER_TEMP/sailens-ci-app-signing.jks"
-          keytool -genkeypair -noprompt -storetype JKS -keystore "$keystore" -storepass ci-password -keypass ci-password -alias ci-app-signing -keyalg RSA -keysize 2048 -validity 3650 -dname "CN=Sailens CI, O=Sailens, C=US"
+          keystore="$RUNNER_TEMP/sailens-ci-app-signing.p12"
+          keytool -genkeypair -noprompt -storetype PKCS12 -keystore "$keystore" -storepass ci-password -alias ci-app-signing -keyalg RSA -keysize 2048 -validity 3650 -dname "CN=Sailens CI, O=Sailens, C=US"
           SAILENS_APP_SIGNING_KEYSTORE="$keystore" SAILENS_APP_SIGNING_STORE_PASSWORD=ci-password SAILENS_APP_SIGNING_KEY_ALIAS=ci-app-signing SAILENS_APP_SIGNING_KEY_PASSWORD=ci-password ./gradlew :app:assembleRelease -Psailens.versionName=0.0.1 -Psailens.versionCode=1 --no-configuration-cache --stacktrace
           apk="app/build/outputs/apk/release/app-release.apk"
           test -s "$apk"

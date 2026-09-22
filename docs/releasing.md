@@ -29,9 +29,9 @@ private signing key, then run:
 
 The script:
 
-- creates (or explicitly reuses) `~/.sailens/signing/sailens-app-signing.jks` by default;
+- creates (or explicitly reuses) `~/.sailens/signing/sailens-app-signing.p12` as a **PKCS12** keystore by default;
 - uses a 4096-bit RSA key with a 10,000-day validity period;
-- asks for signing passwords with hidden terminal input and does not put them in shell history;
+- asks for one signing password with hidden terminal input and uses it for both the PKCS12 store and private key, matching Android signing guidance;
 - uses Java `keytool` environment-password inputs instead of passing passwords as command-line
   arguments;
 - prints the public signing-certificate SHA-256;
@@ -61,7 +61,7 @@ The script configures these repository secrets:
 - `SAILENS_APP_SIGNING_KEY_ALIAS`
 - `SAILENS_APP_SIGNING_KEY_PASSWORD`
 
-The private keystore and passwords must never be committed. **Before the first public release,
+PKCS12 is the current Java default and Oracle-recommended keystore format; the helper uses it explicitly so the release path does not depend on JDK defaults. The private keystore and passwords must never be committed. **Before the first public release,
 create an offline backup of the keystore and store its passwords separately.** The public
 signing-certificate SHA-256 is recorded in every `release-manifest.json`; retain that fingerprint
 when configuring future Play App Signing.

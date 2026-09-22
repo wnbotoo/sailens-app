@@ -108,6 +108,7 @@ android {
             create("release") {
                 storeFile = file(appSigningKeystorePath.get())
                 storePassword = appSigningStorePassword.get()
+                storeType = "PKCS12"
                 keyAlias = appSigningKeyAlias.get()
                 keyPassword = appSigningKeyPassword.get()
             }
