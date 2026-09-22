@@ -56,7 +56,7 @@ Sailens Android 的 `.gitignore` 忽略 `app/src/main/assets/*.tflite`——它�
 | 权重 license | AGPL-3.0（按 Ultralytics 的主张；权重是否适用 copyleft 在业界有争议，本仓库按其主张从严处理） |
 | 训练数据集 | Cityscapes（19 类 trainId） |
 | 数据集 license | 🔴 **非商用**。约束跟着权重走，与代码许可无关 |
-| 可否再分发 | 可，按 AGPL-3.0（须提供完整对应源码） |
+| 可否再分发 | 仅在**同时**满足两层约束时可：履行 AGPL-3.0 义务；并满足 Cityscapes 条款——trained model 只能作为不能恢复原数据的抽象 derivative 分发，且数据集或 derivative work 不得用于商业目的 |
 | 商业使用 | 🔴 **不可**（受 Cityscapes 数据集约束）。免费 app 有"非商用"论点；**任何商业化（含卖硬件）前必须换用可商用数据训练的 sem 模型** |
 | 导出格式 | onnx2tf float16 export，NHWC |
 | I/O | FLOAT32 `[1,640,640,3]` → `Identity` FLOAT32 `[1,640,640,19]` 稠密分数 |
