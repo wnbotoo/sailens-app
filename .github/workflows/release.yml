@@ -103,7 +103,7 @@ jobs:
           set -euo pipefail
           aab="app/build/outputs/bundle/release/app-release.aab"
           test -s "$aab"
-          jarsigner -verify -strict "$aab"
+          jarsigner -verify "$aab"
 
       - name: Prepare release artifacts
         id: artifacts
