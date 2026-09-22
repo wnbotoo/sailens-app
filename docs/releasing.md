@@ -88,8 +88,9 @@ The `Release` workflow then:
 4. verifies the AAB signature;
 5. generates `release-manifest.json` with the product commit, exact Sailens Android commit, model
    hashes/embedded exporter metadata and AAB hash;
-6. archives the exact Sailens Android source pinned by the release;
-7. creates a **draft** GitHub Release containing the signed AAB, manifest and platform source
+6. creates a combined corresponding-source archive containing this exact Sailens app tag plus the
+   exact Sailens Android source pinned at `sailens/`;
+7. creates a **draft** GitHub Release containing the signed AAB, manifest and combined source
    archive;
 8. uploads that same AAB plus the R8 mapping file to Google Play **Internal testing**;
 9. publishes the GitHub Release only after the Play upload succeeds.
