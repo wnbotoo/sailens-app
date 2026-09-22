@@ -5,7 +5,7 @@ umask 077
 
 REPOSITORY="${SAILENS_GITHUB_REPOSITORY:-wnbotoo/sailens-app}"
 SIGNING_DIR="${SAILENS_SIGNING_DIR:-$HOME/.sailens/signing}"
-KEYSTORE="${SAILENS_APP_SIGNING_KEYSTORE_PATH:-$SIGNING_DIR/sailens-app-signing.jks}"
+KEYSTORE="${SAILENS_APP_SIGNING_KEYSTORE_PATH:-$SIGNING_DIR/sailens-app-signing.p12}"
 KEY_ALIAS="${SAILENS_APP_SIGNING_KEY_ALIAS_VALUE:-sailens-app}"
 
 require_command() {
@@ -51,36 +51,23 @@ chmod 700 "$SIGNING_DIR"
 
 echo "Repository: $REPOSITORY"
 echo "Keystore:   $KEYSTORE"
+echo "Type:       PKCS12"
 echo "Alias:      $KEY_ALIAS"
 echo
 
-store_password="$(read_secret_twice   "Keystore password: "   "Confirm keystore password: ")"
+store_password="$(
+  read_secret_twice     "Signing password: "     "Confirm signing password: "
+)"
 
-read -r -s -p "Key password (press Enter to reuse the keystore password): " key_password
-echo >&2
-if [[ -z "$key_password" ]]; then
-  key_password="$store_password"
-else
-  read -r -s -p "Confirm key password: " key_password_confirm
-  echo >&2
-  if [[ "$key_password" != "$key_password_confirm" ]]; then
-    echo "error: key passwords do not match." >&2
-    exit 1
-  fi
-  if (( ${#key_password} < 12 )); then
-    echo "error: use at least 12 characters for a long-lived signing password." >&2
-    exit 1
-  fi
-fi
-
+# Android recommends using the same password for the keystore and private key.
+key_password="$store_password"
 export SAILENS_KEYTOOL_STORE_PASSWORD="$store_password"
-export SAILENS_KEYTOOL_KEY_PASSWORD="$key_password"
 
 if [[ -e "$KEYSTORE" ]]; then
-  read -r -p "Keystore already exists. Reuse it without overwriting? [y/N] " answer
+  read -r -p "PKCS12 keystore already exists. Reuse it without overwriting? [y/N] " answer
   case "$answer" in
     y|Y|yes|YES)
-      keytool -list         -keystore "$KEYSTORE"         -storetype JKS         -alias "$KEY_ALIAS"         -storepass:env SAILENS_KEYTOOL_STORE_PASSWORD >/dev/null
+      keytool -list         -keystore "$KEYSTORE"         -storetype PKCS12         -alias "$KEY_ALIAS"         -storepass:env SAILENS_KEYTOOL_STORE_PASSWORD >/dev/null
       ;;
     *)
       echo "error: refusing to overwrite existing keystore: $KEYSTORE" >&2
@@ -88,12 +75,12 @@ if [[ -e "$KEYSTORE" ]]; then
       ;;
   esac
 else
-  keytool -genkeypair -noprompt     -keystore "$KEYSTORE"     -storetype JKS     -alias "$KEY_ALIAS"     -keyalg RSA     -keysize 4096     -validity 10000     -dname "CN=Sailens Android, O=Sailens"     -storepass:env SAILENS_KEYTOOL_STORE_PASSWORD     -keypass:env SAILENS_KEYTOOL_KEY_PASSWORD
+  keytool -genkeypair -noprompt     -keystore "$KEYSTORE"     -storetype PKCS12     -alias "$KEY_ALIAS"     -keyalg RSA     -keysize 4096     -validity 10000     -dname "CN=Sailens Android, O=Sailens"     -storepass:env SAILENS_KEYTOOL_STORE_PASSWORD
   chmod 600 "$KEYSTORE"
 fi
 
 certificate_sha256="$(
-  keytool -exportcert     -keystore "$KEYSTORE"     -storetype JKS     -alias "$KEY_ALIAS"     -storepass:env SAILENS_KEYTOOL_STORE_PASSWORD |
+  keytool -exportcert     -keystore "$KEYSTORE"     -storetype PKCS12     -alias "$KEY_ALIAS"     -storepass:env SAILENS_KEYTOOL_STORE_PASSWORD |
     python3 -c 'import hashlib, sys; print(hashlib.sha256(sys.stdin.buffer.read()).hexdigest())'
 )"
 
@@ -142,6 +129,7 @@ done
 echo
 echo "Signing setup complete."
 echo "GitHub reports all four required Actions secret names."
+echo "Keystore type: PKCS12"
 echo "Certificate SHA-256: $certificate_sha256"
 echo
 echo "Do not create a release tag until the keystore has an offline backup and the physical-device release gate is complete."
