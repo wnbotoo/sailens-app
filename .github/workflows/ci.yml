@@ -44,6 +44,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          bash -n scripts/setup-github-signing.sh
           python3 -m py_compile scripts/resolve-release-version.py scripts/create-release-manifest.py
           output="$(python3 scripts/resolve-release-version.py v1.2.3)"
           grep -qx 'version_name=1.2.3' <<< "$output"

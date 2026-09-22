@@ -20,29 +20,61 @@ signing AABs sent to Play. Do not use the GitHub app signing key as the routine 
 
 ## One-time GitHub signing setup
 
-1. Generate an RSA app-signing key of at least 2048 bits and keep an offline backup. A 4096-bit RSA
-   key is a reasonable choice for a new long-lived key. For example:
+Preferred path: clone/update the repository on the machine where you want to create and retain the
+private signing key, then run:
 
-   ```bash
-   keytool -genkeypair -v \
-     -keystore sailens-app-signing.jks \
-     -alias sailens-app \
-     -keyalg RSA \
-     -keysize 4096 \
-     -validity 10000
-   ```
+```bash
+./scripts/setup-github-signing.sh
+```
 
-2. Base64-encode the keystore without changing its bytes.
-3. In `wnbotoo/sailens-app -> Settings -> Secrets and variables -> Actions`, create:
+The script:
 
-   - `SAILENS_APP_SIGNING_KEYSTORE_BASE64`
-   - `SAILENS_APP_SIGNING_STORE_PASSWORD`
-   - `SAILENS_APP_SIGNING_KEY_ALIAS`
-   - `SAILENS_APP_SIGNING_KEY_PASSWORD`
+- creates (or explicitly reuses) `~/.sailens/signing/sailens-app-signing.jks` by default;
+- uses a 4096-bit RSA key with a 10,000-day validity period;
+- asks for signing passwords with hidden terminal input and does not put them in shell history;
+- uses Java `keytool` environment-password inputs instead of passing passwords as command-line
+  arguments;
+- prints the public signing-certificate SHA-256;
+- asks again before writing anything to GitHub;
+- uses `gh secret set` to create/update the four repository Actions secrets;
+- verifies only the resulting secret **names**. GitHub does not expose secret values back to the
+  script.
 
-The private keystore and passwords must never be committed. The public signing-certificate SHA-256
-is recorded in every `release-manifest.json`; keep that fingerprint when configuring future Play
-App Signing.
+Prerequisites:
+
+```text
+keytool   JDK tool
+python3
+gh        authenticated with GitHub
+```
+
+If needed, authenticate first with:
+
+```bash
+gh auth login
+```
+
+The script configures these repository secrets:
+
+- `SAILENS_APP_SIGNING_KEYSTORE_BASE64`
+- `SAILENS_APP_SIGNING_STORE_PASSWORD`
+- `SAILENS_APP_SIGNING_KEY_ALIAS`
+- `SAILENS_APP_SIGNING_KEY_PASSWORD`
+
+The private keystore and passwords must never be committed. **Before the first public release,
+create an offline backup of the keystore and store its passwords separately.** The public
+signing-certificate SHA-256 is recorded in every `release-manifest.json`; retain that fingerprint
+when configuring future Play App Signing.
+
+To use a different local key directory, repository, keystore path or alias, set the corresponding
+environment variable before running the script:
+
+```text
+SAILENS_SIGNING_DIR
+SAILENS_GITHUB_REPOSITORY
+SAILENS_APP_SIGNING_KEYSTORE_PATH
+SAILENS_APP_SIGNING_KEY_ALIAS_VALUE
+```
 
 ## Version contract
 
