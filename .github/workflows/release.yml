@@ -79,10 +79,25 @@ jobs:
           SAILENS_APP_SIGNING_KEYSTORE_BASE64: ${{ secrets.SAILENS_APP_SIGNING_KEYSTORE_BASE64 }}
         run: |
           set -euo pipefail
-          keystore="$RUNNER_TEMP/sailens-app-signing.jks"
+          keystore="$RUNNER_TEMP/sailens-app-signing.p12"
           printf '%s' "$SAILENS_APP_SIGNING_KEYSTORE_BASE64" | base64 --decode > "$keystore"
           chmod 600 "$keystore"
           echo "SAILENS_APP_SIGNING_KEYSTORE=$keystore" >> "$GITHUB_ENV"
+
+      - name: Verify app-signing identity
+        shell: bash
+        env:
+          SAILENS_APP_SIGNING_STORE_PASSWORD: ${{ secrets.SAILENS_APP_SIGNING_STORE_PASSWORD }}
+          SAILENS_APP_SIGNING_KEY_ALIAS: ${{ secrets.SAILENS_APP_SIGNING_KEY_ALIAS }}
+        run: |
+          set -euo pipefail
+          export SAILENS_KEYTOOL_STORE_PASSWORD="$SAILENS_APP_SIGNING_STORE_PASSWORD"
+          expected="$(tr '[:upper:]' '[:lower:]' < release/app-signing-certificate.sha256 | tr -d ':[:space:]')"
+          actual="$(keytool -exportcert -keystore "$SAILENS_APP_SIGNING_KEYSTORE" -storetype PKCS12 -alias "$SAILENS_APP_SIGNING_KEY_ALIAS" -storepass:env SAILENS_KEYTOOL_STORE_PASSWORD | python3 -c 'import hashlib, sys; print(hashlib.sha256(sys.stdin.buffer.read()).hexdigest())')"
+          [[ "$actual" == "$expected" ]] || {
+            echo "::error::Configured app-signing secret does not match the pinned Sailens signing identity."
+            exit 1
+          }
 
       - name: Build, test and lint signed APK
         env:
@@ -108,6 +123,11 @@ jobs:
           "$apksigner" verify --verbose --print-certs "$apk" | tee "$RUNNER_TEMP/apksigner.txt"
           cert_sha="$(sed -n 's/^.*certificate SHA-256 digest: //p' "$RUNNER_TEMP/apksigner.txt" | head -n 1 | tr '[:upper:]' '[:lower:]' | tr -d ':[:space:]')"
           [[ "$cert_sha" =~ ^[0-9a-f]{64}$ ]]
+          expected="$(tr '[:upper:]' '[:lower:]' < release/app-signing-certificate.sha256 | tr -d ':[:space:]')"
+          [[ "$cert_sha" == "$expected" ]] || {
+            echo "::error::Built APK signer does not match the pinned Sailens signing identity."
+            exit 1
+          }
           echo "signing_cert_sha256=$cert_sha" >> "$GITHUB_OUTPUT"
 
       - name: Prepare release artifacts
@@ -152,8 +172,3 @@ jobs:
             gh release create "$tag" "${{ steps.artifacts.outputs.apk }}" "${{ steps.artifacts.outputs.manifest }}" "${{ steps.artifacts.outputs.source_archive }}" --verify-tag --draft --generate-notes --title "Sailens ${{ steps.version.outputs.version_name }}"
           fi
 
-      - name: Publish GitHub Release
-        shell: bash
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: gh release edit "$GITHUB_REF_NAME" --draft=false

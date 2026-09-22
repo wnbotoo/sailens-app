@@ -45,6 +45,8 @@ jobs:
         run: |
           set -euo pipefail
           bash -n scripts/setup-github-signing.sh
+          pwsh -NoProfile -Command '$tokens=$null; $errors=$null; [System.Management.Automation.Language.Parser]::ParseFile("scripts/run-release-gate.ps1", [ref]$tokens, [ref]$errors) | Out-Null; if ($errors.Count -ne 0) { $errors | ForEach-Object { Write-Error $_ }; exit 1 }'
+          grep -Eq '^[0-9a-f]{64}$' release/app-signing-certificate.sha256
           python3 -m py_compile scripts/resolve-release-version.py scripts/create-release-manifest.py
           output="$(python3 scripts/resolve-release-version.py v1.2.3)"
           grep -qx 'version_name=1.2.3' <<< "$output"

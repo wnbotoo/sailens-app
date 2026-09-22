@@ -88,12 +88,12 @@ cross-repository policy is also present in the pinned platform checkout at
 
 GitHub Releases are the current official distribution channel. Pushing a semantic-version tag such
 as `v1.0.0` builds a **signed, installable APK**, records the exact platform/model/artifact hashes
-and signing-certificate fingerprint in a release manifest, attaches the corresponding source
-archive, and publishes the release on GitHub.
+and signing-certificate fingerprint, attaches corresponding source, and creates a **Draft Release**.
+The exact Draft APK must pass the physical-device release gate before the Release is made public.
 
 Google Play publication is currently **pending** while the developer account is re-established. The
 tag workflow does not call Google Play. When Play distribution is added later, it must preserve the
 same app-signing identity so existing GitHub-installed copies can be updated in place.
 
-See [`docs/releasing.md`](docs/releasing.md) for signing setup, the pre-tag device/model gates, and
-the future Play migration rule.
+See [`docs/releasing.md`](docs/releasing.md) for the pinned signing identity, exact-artifact device
+gate, publication steps, and future Play migration rule.
