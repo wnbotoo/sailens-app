@@ -259,7 +259,8 @@ $CrashLog = Join-Path $ReportDir "crash.txt"
 
 Write-Host ""
 Write-Host "Installing exact draft APK on $DeviceModel ($script:DeviceSerial)..."
-$installOutput = @(& $script:Adb @(Get-AdbArgs @("install", "-r", $Apk)) 2>&1 | ForEach-Object { "$_" })
+$installArgs = Get-AdbArgs @("install", "-r", $Apk)
+$installOutput = @(& $script:Adb @installArgs 2>&1 | ForEach-Object { "$_" })
 $installOutput | Set-Content -Encoding UTF8 $InstallLog
 $installOutput | ForEach-Object { Write-Host $_ }
 if ($LASTEXITCODE -ne 0) {
@@ -296,9 +297,11 @@ Add-ManualPass "Expected haptic output was physically felt for a guidance/failur
 Add-ManualPass "Current same-commit device evidence shows no material performance/backend regression from the accepted baseline."
 Add-ManualPass "The intended public distribution has been checked against current model-provenance terms, including the Cityscapes non-commercial restriction."
 
-$logcatOutput = @(& $script:Adb @(Get-AdbArgs @("logcat", "-d", "-v", "threadtime")) 2>&1 | ForEach-Object { "$_" })
+$logcatArgs = Get-AdbArgs @("logcat", "-d", "-v", "threadtime")
+$logcatOutput = @(& $script:Adb @logcatArgs 2>&1 | ForEach-Object { "$_" })
 $logcatOutput | Set-Content -Encoding UTF8 $Logcat
-$crashOutput = @(& $script:Adb @(Get-AdbArgs @("logcat", "-d", "-b", "crash", "-v", "threadtime")) 2>&1 | ForEach-Object { "$_" })
+$crashArgs = Get-AdbArgs @("logcat", "-d", "-b", "crash", "-v", "threadtime")
+$crashOutput = @(& $script:Adb @crashArgs 2>&1 | ForEach-Object { "$_" })
 $crashOutput | Set-Content -Encoding UTF8 $CrashLog
 
 $pidAfter = ((Invoke-AdbCaptured @("shell", "pidof", $PackageName)) -join "").Trim()
