@@ -65,13 +65,13 @@ def main() -> int:
     parser.add_argument("--version-name", required=True)
     parser.add_argument("--version-code", required=True, type=int)
     parser.add_argument("--aab", required=True, type=Path)
-    parser.add_argument("--platform-source", required=True, type=Path)
+    parser.add_argument("--source-archive", required=True, type=Path)
     parser.add_argument("--output", required=True, type=Path)
     args = parser.parse_args()
 
     aab = args.aab.resolve()
-    platform_source = args.platform_source.resolve()
-    for path in (aab, platform_source, *MODEL_PATHS.values()):
+    source_archive = args.source_archive.resolve()
+    for path in (aab, source_archive, *MODEL_PATHS.values()):
         if not path.is_file():
             raise FileNotFoundError(path)
 
@@ -111,7 +111,7 @@ def main() -> int:
         "models": models,
         "artifacts": {
             "appBundle": artifact_record(aab),
-            "platformSourceArchive": artifact_record(platform_source),
+            "correspondingSourceArchive": artifact_record(source_archive),
         },
         "automation": {
             "githubRunId": os.environ.get("GITHUB_RUN_ID"),
