@@ -2,9 +2,11 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import re
 import subprocess
 import sys
+import zipfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -61,6 +63,16 @@ def file_sha256(path: Path) -> str:
         for chunk in iter(lambda: handle.read(1024 * 1024), b""):
             digest.update(chunk)
     return digest.hexdigest()
+
+
+def embedded_ultralytics_metadata(path: Path) -> dict[str, object] | None:
+    try:
+        with zipfile.ZipFile(path) as archive:
+            with archive.open("metadata.json") as metadata_file:
+                metadata = json.load(metadata_file)
+    except (KeyError, OSError, ValueError, zipfile.BadZipFile):
+        return None
+    return metadata if isinstance(metadata, dict) else None
 
 
 def main() -> int:
@@ -202,6 +214,18 @@ def main() -> int:
     for model_name, model_path in MODELS.items():
         if model_path.is_file():
             print(f"{model_name}: {file_sha256(model_path)}")
+            metadata = embedded_ultralytics_metadata(model_path)
+            if metadata is None:
+                print(f"{model_name} embedded Ultralytics metadata: unavailable")
+            else:
+                selected_metadata = {
+                    key: metadata.get(key)
+                    for key in ("version", "date", "task", "imgsz", "args", "end2end")
+                }
+                print(
+                    f"{model_name} embedded Ultralytics metadata: "
+                    f"{json.dumps(selected_metadata, sort_keys=True)}"
+                )
     print("Sailens distribution contract verification passed.")
     return 0
 
