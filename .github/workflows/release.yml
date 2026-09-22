@@ -66,8 +66,7 @@ jobs:
         run: |
           set -euo pipefail
           missing=0
-          for name in             SAILENS_UPLOAD_KEYSTORE_BASE64             SAILENS_UPLOAD_STORE_PASSWORD             SAILENS_UPLOAD_KEY_ALIAS             SAILENS_UPLOAD_KEY_PASSWORD             PLAY_SERVICE_ACCOUNT_JSON
-          do
+          for name in SAILENS_UPLOAD_KEYSTORE_BASE64 SAILENS_UPLOAD_STORE_PASSWORD SAILENS_UPLOAD_KEY_ALIAS SAILENS_UPLOAD_KEY_PASSWORD PLAY_SERVICE_ACCOUNT_JSON; do
             if [[ -z "${!name:-}" ]]; then
               echo "::error::Missing required release secret: $name"
               missing=1
@@ -91,11 +90,11 @@ jobs:
           SAILENS_UPLOAD_STORE_PASSWORD: ${{ secrets.SAILENS_UPLOAD_STORE_PASSWORD }}
           SAILENS_UPLOAD_KEY_ALIAS: ${{ secrets.SAILENS_UPLOAD_KEY_ALIAS }}
           SAILENS_UPLOAD_KEY_PASSWORD: ${{ secrets.SAILENS_UPLOAD_KEY_PASSWORD }}
-        run: |
-          ./gradlew build lint :app:bundleRelease \
-            -Psailens.versionName="${{ steps.version.outputs.version_name }}" \
-            -Psailens.versionCode="${{ steps.version.outputs.version_code }}" \
-            --stacktrace
+        run: >
+          ./gradlew build lint :app:bundleRelease
+          -Psailens.versionName="${{ steps.version.outputs.version_name }}"
+          -Psailens.versionCode="${{ steps.version.outputs.version_code }}"
+          --stacktrace
 
       - name: Verify signed app bundle
         shell: bash
@@ -112,18 +111,14 @@ jobs:
           set -euo pipefail
           version="${{ steps.version.outputs.version_name }}"
           mkdir -p dist
-
           aab="dist/sailens-$version.aab"
           cp app/build/outputs/bundle/release/app-release.aab "$aab"
-
           platform_sha="$(git -C sailens rev-parse HEAD)"
           platform_short_sha="$(git -C sailens rev-parse --short=12 HEAD)"
           platform_source="dist/sailens-android-$platform_short_sha-source.tar.gz"
-          git -C sailens archive             --format=tar.gz             --prefix="sailens-android-$platform_sha/"             -o "$GITHUB_WORKSPACE/$platform_source"             HEAD
-
+          git -C sailens archive --format=tar.gz --prefix="sailens-android-$platform_sha/" -o "$GITHUB_WORKSPACE/$platform_source" HEAD
           manifest="dist/release-manifest.json"
-          python3 scripts/create-release-manifest.py             --tag "$GITHUB_REF_NAME"             --version-name "$version"             --version-code "${{ steps.version.outputs.version_code }}"             --aab "$aab"             --platform-source "$platform_source"             --output "$manifest"
-
+          python3 scripts/create-release-manifest.py --tag "$GITHUB_REF_NAME" --version-name "$version" --version-code "${{ steps.version.outputs.version_code }}" --aab "$aab" --platform-source "$platform_source" --output "$manifest"
           echo "aab=$aab" >> "$GITHUB_OUTPUT"
           echo "platform_source=$platform_source" >> "$GITHUB_OUTPUT"
           echo "manifest=$manifest" >> "$GITHUB_OUTPUT"
@@ -141,9 +136,9 @@ jobs:
               echo "::error::A published GitHub Release already exists for $tag."
               exit 1
             fi
-            gh release upload "$tag"               "${{ steps.artifacts.outputs.aab }}"               "${{ steps.artifacts.outputs.manifest }}"               "${{ steps.artifacts.outputs.platform_source }}"               --clobber
+            gh release upload "$tag" "${{ steps.artifacts.outputs.aab }}" "${{ steps.artifacts.outputs.manifest }}" "${{ steps.artifacts.outputs.platform_source }}" --clobber
           else
-            gh release create "$tag"               "${{ steps.artifacts.outputs.aab }}"               "${{ steps.artifacts.outputs.manifest }}"               "${{ steps.artifacts.outputs.platform_source }}"               --verify-tag               --draft               --generate-notes               --title "Sailens ${{ steps.version.outputs.version_name }}"
+            gh release create "$tag" "${{ steps.artifacts.outputs.aab }}" "${{ steps.artifacts.outputs.manifest }}" "${{ steps.artifacts.outputs.platform_source }}" --verify-tag --draft --generate-notes --title "Sailens ${{ steps.version.outputs.version_name }}"
           fi
 
       - name: Upload to Google Play Internal testing
