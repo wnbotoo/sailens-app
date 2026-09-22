@@ -60,3 +60,21 @@ jobs:
           keytool -genkeypair -noprompt -storetype JKS -keystore "$keystore" -storepass ci-password -keypass ci-password -alias ci-upload -keyalg RSA -keysize 2048 -validity 3650 -dname "CN=Sailens CI, O=Sailens, C=US"
           SAILENS_UPLOAD_KEYSTORE="$keystore" SAILENS_UPLOAD_STORE_PASSWORD=ci-password SAILENS_UPLOAD_KEY_ALIAS=ci-upload SAILENS_UPLOAD_KEY_PASSWORD=ci-password ./gradlew :app:bundleRelease -Psailens.versionName=0.0.1 -Psailens.versionCode=1 --no-configuration-cache --stacktrace
           jarsigner -verify app/build/outputs/bundle/release/app-release.aab
+
+      - name: Verify release manifest generation
+        shell: bash
+        run: |
+          set -euo pipefail
+          source_dir="$RUNNER_TEMP/sailens-ci-source"
+          rm -rf "$source_dir"
+          mkdir -p "$source_dir"
+          git archive HEAD | tar -x -C "$source_dir"
+          rm -rf "$source_dir/sailens"
+          mkdir -p "$source_dir/sailens"
+          git -C sailens archive HEAD | tar -x -C "$source_dir/sailens"
+          mkdir -p dist
+          source_archive="dist/sailens-ci-source.tar.gz"
+          tar -czf "$GITHUB_WORKSPACE/$source_archive" -C "$RUNNER_TEMP" "$(basename "$source_dir")"
+          manifest="dist/release-manifest-ci.json"
+          python3 scripts/create-release-manifest.py --tag v0.0.1 --version-name 0.0.1 --version-code 1 --aab app/build/outputs/bundle/release/app-release.aab --source-archive "$source_archive" --output "$manifest"
+          python3 -c 'import json, pathlib, sys; data=json.loads(pathlib.Path(sys.argv[1]).read_text()); assert data["tag"] == "v0.0.1"; assert data["versionCode"] == 1; assert len(data["source"]["commit"]) == 40; assert len(data["source"]["platformCommit"]) == 40; assert len(data["models"]["semantic"]["sha256"]) == 64; assert len(data["models"]["detection"]["sha256"]) == 64; assert len(data["artifacts"]["appBundle"]["sha256"]) == 64; assert len(data["artifacts"]["correspondingSourceArchive"]["sha256"]) == 64' "$manifest"
