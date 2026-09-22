@@ -63,7 +63,7 @@ technical contract looks compatible.
 | Weights license | AGPL-3.0 (per Ultralytics' position; whether copyleft applies to weights is contested in the industry — this repository takes the strict reading of their claim) |
 | Training dataset | Cityscapes (19 trainId classes) |
 | Dataset license | 🔴 **NON-COMMERCIAL**. This constraint travels with the weights and is independent of any code license |
-| Redistribution | Permitted, under AGPL-3.0 (complete corresponding source must be provided) |
+| Redistribution | Permitted only subject to **both** layers: AGPL-3.0 obligations **and** Cityscapes' rule that a trained model may be distributed only as an abstract derivative that does not allow recovery of the dataset; commercial use of the dataset or derivative work is not permitted |
 | Commercial use | 🔴 **Not permitted** (Cityscapes dataset constraint). A free app has a "non-commercial" argument; **any commercialization, including selling hardware, requires replacing this with a sem model trained on commercially usable data** |
 | Export format | onnx2tf float16 export, NHWC |
 | I/O | FLOAT32 `[1,640,640,3]` → `Identity` FLOAT32 `[1,640,640,19]` dense scores |
