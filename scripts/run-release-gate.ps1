@@ -297,18 +297,20 @@ Add-ManualPass "Expected haptic output was physically felt for a guidance/failur
 Add-ManualPass "Current same-commit device evidence shows no material performance/backend regression from the accepted baseline."
 Add-ManualPass "The intended public distribution has been checked against current model-provenance terms, including the Cityscapes non-commercial restriction."
 
-$logcatArgs = Get-AdbArgs @("logcat", "-d", "-v", "threadtime")
+$pidAfter = ((Invoke-AdbCaptured @("shell", "pidof", $PackageName)) -join "").Trim()
+if (-not $pidAfter) { Fail "$PackageName is no longer running after the manual session." }
+if ($pidAfter -ne $pid) { Fail "$PackageName process restarted during the gate ($pid -> $pidAfter)." }
+
+$logcatArgs = Get-AdbArgs @("logcat", "-d", "--pid=$pid", "-v", "threadtime")
 $logcatOutput = @(& $script:Adb @logcatArgs 2>&1 | ForEach-Object { "$_" })
 $logcatOutput | Set-Content -Encoding UTF8 $Logcat
 $crashArgs = Get-AdbArgs @("logcat", "-d", "-b", "crash", "-v", "threadtime")
 $crashOutput = @(& $script:Adb @crashArgs 2>&1 | ForEach-Object { "$_" })
 $crashOutput | Set-Content -Encoding UTF8 $CrashLog
 
-$pidAfter = ((Invoke-AdbCaptured @("shell", "pidof", $PackageName)) -join "").Trim()
-if (-not $pidAfter) { Fail "$PackageName is no longer running after the manual session." }
 if (($crashOutput -join "`n") -match [regex]::Escape($PackageName)) { Fail "Crash buffer contains $PackageName; inspect $CrashLog." }
 $fatalPattern = "UnsatisfiedLinkError|No implementation found for|JNI DETECTED ERROR|dlopen failed|Fatal signal|SIG(SEGV|ABRT)"
-if (($logcatOutput -join "`n") -match $fatalPattern) { Fail "Native/JNI fatal pattern found; inspect $Logcat." }
+if (($logcatOutput -join "`n") -match $fatalPattern) { Fail "Native/JNI fatal pattern found in the Sailens process log; inspect $Logcat." }
 
 @"
 
