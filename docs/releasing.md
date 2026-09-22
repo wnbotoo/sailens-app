@@ -1,29 +1,48 @@
-# Releasing Sailens to Google Play
+# Releasing Sailens
 
-This document covers the official `wnbotoo/sailens-app` release path. The workflow intentionally
-stops at Google Play **Internal testing**. Production promotion is a separate human decision in Play
-Console.
+The current official distribution channel is **GitHub Releases**. A release tag produces a signed,
+installable APK that users can download and install directly. Google Play publishing is currently
+**pending** and is deliberately not part of the tag workflow.
 
-## One-time setup
+## Signing identity
 
-1. Create the `com.sailens` application in Google Play Console and enroll it in **Play App
-   Signing**.
-2. Create and securely back up a dedicated **upload key**. The CI workflow never needs the Play app
-   signing key; it signs the AAB with the upload key, then Play App Signing signs the APKs delivered
-   to users.
-3. Base64-encode the upload keystore and configure these GitHub Actions secrets:
-   - `SAILENS_UPLOAD_KEYSTORE_BASE64`
-   - `SAILENS_UPLOAD_STORE_PASSWORD`
-   - `SAILENS_UPLOAD_KEY_ALIAS`
-   - `SAILENS_UPLOAD_KEY_PASSWORD`
-4. Create a Google service account for the Android Publisher API, grant it access to the Sailens app
-   in Play Console, and store its JSON credentials as:
-   - `PLAY_SERVICE_ACCOUNT_JSON`
-5. Complete Play Console's app-content, privacy, store-listing and testing prerequisites before the
-   first tag-driven upload.
+The GitHub APK must use a long-lived **app signing key**, not a disposable CI key and not a future
+Google Play upload key.
 
-The upload keystore and service-account JSON are secrets. Do not commit either file or their decoded
-contents.
+Android only accepts an in-place update when the application ID matches and the new APK is signed
+by the same signing identity (or a valid signing-key rotation). Because the GitHub APK establishes
+the installed app's signing identity, losing or replacing this key can strand existing sideload
+installations.
+
+For future Google Play distribution, keep the same app signing identity across channels: configure
+Play App Signing with a copy of this app signing key, then create a **separate upload key** for
+signing AABs sent to Play. Do not use the GitHub app signing key as the routine Play upload key.
+
+## One-time GitHub signing setup
+
+1. Generate an RSA app-signing key of at least 2048 bits and keep an offline backup. A 4096-bit RSA
+   key is a reasonable choice for a new long-lived key. For example:
+
+   ```bash
+   keytool -genkeypair -v \
+     -keystore sailens-app-signing.jks \
+     -alias sailens-app \
+     -keyalg RSA \
+     -keysize 4096 \
+     -validity 10000
+   ```
+
+2. Base64-encode the keystore without changing its bytes.
+3. In `wnbotoo/sailens-app -> Settings -> Secrets and variables -> Actions`, create:
+
+   - `SAILENS_APP_SIGNING_KEYSTORE_BASE64`
+   - `SAILENS_APP_SIGNING_STORE_PASSWORD`
+   - `SAILENS_APP_SIGNING_KEY_ALIAS`
+   - `SAILENS_APP_SIGNING_KEY_PASSWORD`
+
+The private keystore and passwords must never be committed. The public signing-certificate SHA-256
+is recorded in every `release-manifest.json`; keep that fingerprint when configuring future Play
+App Signing.
 
 ## Version contract
 
@@ -68,7 +87,7 @@ cannot prove:
 The platform documentation records known pre-existing performance gaps. The release gate is to avoid
 silently regressing the accepted baseline, not to pretend those known gaps already hold.
 
-## Publishing an internal release
+## Publishing a GitHub release
 
 After the gate is complete:
 
@@ -84,25 +103,52 @@ The `Release` workflow then:
 1. checks out the tagged commit and exact `sailens/` submodule;
 2. verifies the tag format, that the commit belongs to `main`, the distribution contract and model
    hashes;
-3. builds/tests/lints a release signed with the upload key;
-4. verifies the AAB signature;
-5. generates `release-manifest.json` with the product commit, exact Sailens Android commit, model
-   hashes/embedded exporter metadata and AAB hash;
+3. builds/tests/lints a minified release APK signed with the long-lived app signing key;
+4. verifies the APK with Android `apksigner` and records the signing-certificate SHA-256;
+5. creates `release-manifest.json` with the product commit, exact Sailens Android commit, model
+   hashes/embedded exporter metadata, APK hash and signing fingerprint;
 6. creates a combined corresponding-source archive containing this exact Sailens app tag plus the
    exact Sailens Android source pinned at `sailens/`;
-7. creates a **draft** GitHub Release containing the signed AAB, manifest and combined source
-   archive;
-8. uploads that same AAB plus the R8 mapping file to Google Play **Internal testing**;
-9. publishes the GitHub Release only after the Play upload succeeds.
+7. creates a draft GitHub Release containing:
+   - `sailens-VERSION.apk`
+   - `release-manifest.json`
+   - `sailens-VERSION-source.tar.gz`
+8. publishes the GitHub Release only after all artifacts have been created successfully.
 
-If Play upload fails, the GitHub Release remains a draft for inspection. Do not move the release to
-Production from CI.
+No Google Play API call is made.
 
-## Human promotion
+## Installing and updating the APK
 
-After Internal testing, inspect the Play Console artifact, automated checks and physical-device
-behavior. Promotion to closed/open testing or Production is deliberately manual. This keeps store
-rollout, policy declarations and user exposure separate from build automation.
+The release APK targets arm64 Android devices with Android 12 / API 31 or newer.
+
+Users can download `sailens-VERSION.apk` from the GitHub Release page and install it after allowing
+their browser or file manager to install apps from that source. Developers can install it with:
+
+```bash
+adb install sailens-VERSION.apk
+```
+
+A later GitHub release can update an existing installation in place when it keeps
+`applicationId = com.sailens`, uses the same app signing key, and has a compatible higher
+`versionCode`.
+
+## Google Play status: pending
+
+Do not add Play publishing back to the tag workflow until the new Play developer account and the
+`com.sailens` application identity are ready.
+
+When Play distribution resumes:
+
+1. keep the GitHub app signing key as the cross-channel app signing identity;
+2. configure Play App Signing using a copy of that same app signing key;
+3. create a separate Play **upload key** and store it separately from the app signing key;
+4. add a separate AAB / Play publishing workflow rather than coupling Play availability to GitHub
+   Releases;
+5. verify the Play-delivered APK signing certificate matches the release-manifest fingerprint before
+   treating Play as an update path for existing GitHub installs.
+
+If the new Play account cannot reuse the `com.sailens` package identity, resolve that identity
+issue before promising cross-channel in-place updates.
 
 ## Model replacement rule
 

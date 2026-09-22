@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   release:
-    name: internal
+    name: github
     runs-on: ubuntu-24.04
     timeout-minutes: 35
 
@@ -55,18 +55,17 @@ jobs:
       - name: Verify distribution contract
         run: python3 scripts/verify-distribution.py
 
-      - name: Verify release secrets
+      - name: Verify app-signing secrets
         shell: bash
         env:
-          SAILENS_UPLOAD_KEYSTORE_BASE64: ${{ secrets.SAILENS_UPLOAD_KEYSTORE_BASE64 }}
-          SAILENS_UPLOAD_STORE_PASSWORD: ${{ secrets.SAILENS_UPLOAD_STORE_PASSWORD }}
-          SAILENS_UPLOAD_KEY_ALIAS: ${{ secrets.SAILENS_UPLOAD_KEY_ALIAS }}
-          SAILENS_UPLOAD_KEY_PASSWORD: ${{ secrets.SAILENS_UPLOAD_KEY_PASSWORD }}
-          PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          SAILENS_APP_SIGNING_KEYSTORE_BASE64: ${{ secrets.SAILENS_APP_SIGNING_KEYSTORE_BASE64 }}
+          SAILENS_APP_SIGNING_STORE_PASSWORD: ${{ secrets.SAILENS_APP_SIGNING_STORE_PASSWORD }}
+          SAILENS_APP_SIGNING_KEY_ALIAS: ${{ secrets.SAILENS_APP_SIGNING_KEY_ALIAS }}
+          SAILENS_APP_SIGNING_KEY_PASSWORD: ${{ secrets.SAILENS_APP_SIGNING_KEY_PASSWORD }}
         run: |
           set -euo pipefail
           missing=0
-          for name in SAILENS_UPLOAD_KEYSTORE_BASE64 SAILENS_UPLOAD_STORE_PASSWORD SAILENS_UPLOAD_KEY_ALIAS SAILENS_UPLOAD_KEY_PASSWORD PLAY_SERVICE_ACCOUNT_JSON; do
+          for name in SAILENS_APP_SIGNING_KEYSTORE_BASE64 SAILENS_APP_SIGNING_STORE_PASSWORD SAILENS_APP_SIGNING_KEY_ALIAS SAILENS_APP_SIGNING_KEY_PASSWORD; do
             if [[ -z "${!name:-}" ]]; then
               echo "::error::Missing required release secret: $name"
               missing=1
@@ -74,36 +73,42 @@ jobs:
           done
           exit "$missing"
 
-      - name: Materialize upload keystore
+      - name: Materialize app-signing keystore
         shell: bash
         env:
-          SAILENS_UPLOAD_KEYSTORE_BASE64: ${{ secrets.SAILENS_UPLOAD_KEYSTORE_BASE64 }}
+          SAILENS_APP_SIGNING_KEYSTORE_BASE64: ${{ secrets.SAILENS_APP_SIGNING_KEYSTORE_BASE64 }}
         run: |
           set -euo pipefail
-          keystore="$RUNNER_TEMP/sailens-upload.jks"
-          printf '%s' "$SAILENS_UPLOAD_KEYSTORE_BASE64" | base64 --decode > "$keystore"
+          keystore="$RUNNER_TEMP/sailens-app-signing.jks"
+          printf '%s' "$SAILENS_APP_SIGNING_KEYSTORE_BASE64" | base64 --decode > "$keystore"
           chmod 600 "$keystore"
-          echo "SAILENS_UPLOAD_KEYSTORE=$keystore" >> "$GITHUB_ENV"
+          echo "SAILENS_APP_SIGNING_KEYSTORE=$keystore" >> "$GITHUB_ENV"
 
-      - name: Build, test and lint signed release
+      - name: Build, test and lint signed APK
         env:
-          SAILENS_UPLOAD_STORE_PASSWORD: ${{ secrets.SAILENS_UPLOAD_STORE_PASSWORD }}
-          SAILENS_UPLOAD_KEY_ALIAS: ${{ secrets.SAILENS_UPLOAD_KEY_ALIAS }}
-          SAILENS_UPLOAD_KEY_PASSWORD: ${{ secrets.SAILENS_UPLOAD_KEY_PASSWORD }}
+          SAILENS_APP_SIGNING_STORE_PASSWORD: ${{ secrets.SAILENS_APP_SIGNING_STORE_PASSWORD }}
+          SAILENS_APP_SIGNING_KEY_ALIAS: ${{ secrets.SAILENS_APP_SIGNING_KEY_ALIAS }}
+          SAILENS_APP_SIGNING_KEY_PASSWORD: ${{ secrets.SAILENS_APP_SIGNING_KEY_PASSWORD }}
         run: >
-          ./gradlew build lint :app:bundleRelease
+          ./gradlew build lint :app:assembleRelease
           -Psailens.versionName="${{ steps.version.outputs.version_name }}"
           -Psailens.versionCode="${{ steps.version.outputs.version_code }}"
           --no-configuration-cache
           --stacktrace
 
-      - name: Verify signed app bundle
+      - name: Verify signed APK
+        id: signing
         shell: bash
         run: |
           set -euo pipefail
-          aab="app/build/outputs/bundle/release/app-release.aab"
-          test -s "$aab"
-          jarsigner -verify "$aab"
+          apk="app/build/outputs/apk/release/app-release.apk"
+          test -s "$apk"
+          apksigner="$(find "$ANDROID_HOME/build-tools" -maxdepth 2 -type f -name apksigner | sort -V | tail -n 1)"
+          test -x "$apksigner"
+          "$apksigner" verify --verbose --print-certs "$apk" | tee "$RUNNER_TEMP/apksigner.txt"
+          cert_sha="$(sed -n 's/^Signer #1 certificate SHA-256 digest: //p' "$RUNNER_TEMP/apksigner.txt" | head -n 1 | tr '[:upper:]' '[:lower:]' | tr -d ':[:space:]')"
+          [[ "$cert_sha" =~ ^[0-9a-f]{64}$ ]]
+          echo "signing_cert_sha256=$cert_sha" >> "$GITHUB_OUTPUT"
 
       - name: Prepare release artifacts
         id: artifacts
@@ -112,8 +117,8 @@ jobs:
           set -euo pipefail
           version="${{ steps.version.outputs.version_name }}"
           mkdir -p dist
-          aab="dist/sailens-$version.aab"
-          cp app/build/outputs/bundle/release/app-release.aab "$aab"
+          apk="dist/sailens-$version.apk"
+          cp app/build/outputs/apk/release/app-release.apk "$apk"
           source_dir="$RUNNER_TEMP/sailens-$version-source"
           rm -rf "$source_dir"
           mkdir -p "$source_dir"
@@ -124,8 +129,8 @@ jobs:
           source_archive="dist/sailens-$version-source.tar.gz"
           tar -czf "$GITHUB_WORKSPACE/$source_archive" -C "$RUNNER_TEMP" "$(basename "$source_dir")"
           manifest="dist/release-manifest.json"
-          python3 scripts/create-release-manifest.py --tag "$GITHUB_REF_NAME" --version-name "$version" --version-code "${{ steps.version.outputs.version_code }}" --aab "$aab" --source-archive "$source_archive" --output "$manifest"
-          echo "aab=$aab" >> "$GITHUB_OUTPUT"
+          python3 scripts/create-release-manifest.py --tag "$GITHUB_REF_NAME" --version-name "$version" --version-code "${{ steps.version.outputs.version_code }}" --apk "$apk" --signing-cert-sha256 "${{ steps.signing.outputs.signing_cert_sha256 }}" --source-archive "$source_archive" --output "$manifest"
+          echo "apk=$apk" >> "$GITHUB_OUTPUT"
           echo "source_archive=$source_archive" >> "$GITHUB_OUTPUT"
           echo "manifest=$manifest" >> "$GITHUB_OUTPUT"
 
@@ -142,21 +147,10 @@ jobs:
               echo "::error::A published GitHub Release already exists for $tag."
               exit 1
             fi
-            gh release upload "$tag" "${{ steps.artifacts.outputs.aab }}" "${{ steps.artifacts.outputs.manifest }}" "${{ steps.artifacts.outputs.source_archive }}" --clobber
+            gh release upload "$tag" "${{ steps.artifacts.outputs.apk }}" "${{ steps.artifacts.outputs.manifest }}" "${{ steps.artifacts.outputs.source_archive }}" --clobber
           else
-            gh release create "$tag" "${{ steps.artifacts.outputs.aab }}" "${{ steps.artifacts.outputs.manifest }}" "${{ steps.artifacts.outputs.source_archive }}" --verify-tag --draft --generate-notes --title "Sailens ${{ steps.version.outputs.version_name }}"
+            gh release create "$tag" "${{ steps.artifacts.outputs.apk }}" "${{ steps.artifacts.outputs.manifest }}" "${{ steps.artifacts.outputs.source_archive }}" --verify-tag --draft --generate-notes --title "Sailens ${{ steps.version.outputs.version_name }}"
           fi
-
-      - name: Upload to Google Play Internal testing
-        uses: r0adkll/upload-google-play@v1
-        with:
-          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
-          packageName: com.sailens
-          releaseFile: ${{ steps.artifacts.outputs.aab }}
-          releaseName: ${{ github.ref_name }}
-          track: internal
-          status: completed
-          mappingFile: app/build/outputs/mapping/release/mapping.txt
 
       - name: Publish GitHub Release
         shell: bash

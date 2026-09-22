@@ -5,6 +5,7 @@ import argparse
 import hashlib
 import json
 import os
+import re
 import subprocess
 import zipfile
 from pathlib import Path
@@ -64,16 +65,21 @@ def main() -> int:
     parser.add_argument("--tag", required=True)
     parser.add_argument("--version-name", required=True)
     parser.add_argument("--version-code", required=True, type=int)
-    parser.add_argument("--aab", required=True, type=Path)
+    parser.add_argument("--apk", required=True, type=Path)
+    parser.add_argument("--signing-cert-sha256", required=True)
     parser.add_argument("--source-archive", required=True, type=Path)
     parser.add_argument("--output", required=True, type=Path)
     args = parser.parse_args()
 
-    aab = args.aab.resolve()
+    apk = args.apk.resolve()
     source_archive = args.source_archive.resolve()
-    for path in (aab, source_archive, *MODEL_PATHS.values()):
+    for path in (apk, source_archive, *MODEL_PATHS.values()):
         if not path.is_file():
             raise FileNotFoundError(path)
+
+    certificate_sha256 = args.signing_cert_sha256.lower().replace(":", "")
+    if re.fullmatch(r"[0-9a-f]{64}", certificate_sha256) is None:
+        raise ValueError("signing certificate SHA-256 must be exactly 64 hexadecimal characters.")
 
     platform_gitlink = submodule_sha()
     platform_head = git("rev-parse", "HEAD", cwd=ROOT / "sailens")
@@ -95,10 +101,11 @@ def main() -> int:
         models[role] = record
 
     manifest = {
-        "schemaVersion": 1,
+        "schemaVersion": 2,
         "product": "Sailens",
         "applicationId": "com.sailens",
         "distributionLicense": "AGPL-3.0",
+        "channel": "github",
         "tag": args.tag,
         "versionName": args.version_name,
         "versionCode": args.version_code,
@@ -109,8 +116,12 @@ def main() -> int:
             "platformCommit": platform_gitlink,
         },
         "models": models,
+        "signing": {
+            "certificateSha256": certificate_sha256,
+            "purpose": "application-signing",
+        },
         "artifacts": {
-            "appBundle": artifact_record(aab),
+            "apk": artifact_record(apk),
             "correspondingSourceArchive": artifact_record(source_archive),
         },
         "automation": {
