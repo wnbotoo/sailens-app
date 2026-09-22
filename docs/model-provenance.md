@@ -124,7 +124,7 @@ now" for this problem being solved too.
    taxonomy — **it cannot check class order**. A wrong order does not error; it will quietly call
    a sidewalk a road, out loud, to someone who cannot see it. Test the argmax output on a known
    scene before discussing accuracy.
-3. Update all ten fields in this document (including the sha256).
+3. Update all applicable provenance fields in this document (including the bundled-artifact sha256 and embedded export metadata).
 4. Build and launch this official distribution. It declares Guidance required, so a model whose output does not
    parse or whose class count is wrong stops at the fatal configuration screen before anyone can
    press start — that is the contract guard now. Sailens Android's own suite covers the check itself:

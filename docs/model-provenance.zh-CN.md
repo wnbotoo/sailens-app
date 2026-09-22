@@ -111,7 +111,7 @@ Sailens Android 的 `.gitignore` 忽略 `app/src/main/assets/*.tflite`——它�
 2. **人工验证类别顺序的语义**——Sailens Android 的 `SemanticModelPreflight`（sailens-guidance）
    只能校验 output 能否解析、类别数是否等于声明的 taxonomy，**校验不了类别顺序**。顺序错不会
    报错，会静默把"人行道"当"马路"讲给一个看不见的人听。用一张已知场景实测 argmax 结果再谈精度。
-3. 更新本文档的全部 10 项（含 sha256）。
+3. 更新本文档所有适用的 provenance 字段（包括 bundled-artifact sha256 与 embedded export metadata）。
 4. 构建并启动这个发行版。它声明了 Guidance required，所以 output 解析不了或类别数不对的模型
    会在用户按下开始之前就停在 fatal configuration 屏——这就是现在的契约闸。检查本身由
    Sailens Android 的测试覆盖：在本仓库根目录跑
