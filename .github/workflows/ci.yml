@@ -45,6 +45,7 @@ jobs:
         run: |
           set -euo pipefail
           bash -n scripts/setup-github-signing.sh
+          bash -n scripts/run-release-gate.sh
           grep -Eq '^[0-9a-f]{64}
           python3 -m py_compile scripts/resolve-release-version.py scripts/create-release-manifest.py
           output="$(python3 scripts/resolve-release-version.py v1.2.3)"

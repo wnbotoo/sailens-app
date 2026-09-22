@@ -104,21 +104,25 @@ A release tag must point to a commit reachable from `origin/main`.
 
 ## Pre-tag release gate
 
-Do not create the tag until the exact candidate has passed the product/device checks that hosted CI
-cannot prove:
+Run the gate from a clean, up-to-date `main` checkout with exactly one authorized physical Android device connected:
 
-- semantic channel order validated on known scenes;
-- packaged model preflight and Guidance-required startup behavior;
-- real camera -> sem/det -> Guidance session on a physical arm64 device;
-- minified release smoke, including JNI/RegisterNatives loading;
-- TTS and haptic output;
-- current device performance/backend baseline recorded and checked for regressions;
-- current model-provenance and licensing constraints reviewed, especially Cityscapes
-  non-commercial use.
+```bash
+./scripts/run-release-gate.sh v1.0.0
+```
 
-The platform documentation records known pre-existing performance gaps. The release gate is to avoid
-silently regressing the accepted baseline, not to pretend those known gaps already hold.
+The script uses the real local PKCS12 key and performs the machine-verifiable checks: exact `main`,
+distribution/submodule/model contracts, pinned signing identity, versioned minified APK build, APK
+signature, API/ABI floor, install/version identity, launcher/process survival, and common JNI/native
+fatal patterns from logcat.
 
+It then requires explicit `PASS` confirmation for evidence ADB cannot honestly infer: first-run and
+Guidance startup behavior, retained known-scene semantic channel-order evidence, a two-minute real
+camera sem+det Guidance session, audible TTS/TalkBack, physical haptics, current performance/backend
+evidence, and the Cityscapes non-commercial distribution constraint.
+
+Evidence is written under `dist/release-gate/<tag>-<commit>/` and is intentionally git-ignored.
+This packaging/device gate does **not** replace the broader target-user and Phase A guidance
+validation tracked in the pinned Sailens Android documentation.
 ## Publishing a GitHub release
 
 After the gate is complete:
