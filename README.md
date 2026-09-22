@@ -86,10 +86,14 @@ cross-repository policy is also present in the pinned platform checkout at
 
 ## Releases
 
-Google Play releases use semantic-version tags such as `v1.0.0`. The release workflow
-builds a signed AAB, records the exact platform/model/artifact hashes in a release manifest, creates
-a GitHub Release, and uploads the same AAB to the Google Play **Internal testing** track. Promotion
-beyond Internal testing is intentionally manual.
+GitHub Releases are the current official distribution channel. Pushing a semantic-version tag such
+as `v1.0.0` builds a **signed, installable APK**, records the exact platform/model/artifact hashes
+and signing-certificate fingerprint in a release manifest, attaches the corresponding source
+archive, and publishes the release on GitHub.
 
-See [`docs/releasing.md`](docs/releasing.md) for the one-time Play/signing setup and the pre-tag
-device/model gates.
+Google Play publication is currently **pending** while the developer account is re-established. The
+tag workflow does not call Google Play. When Play distribution is added later, it must preserve the
+same app-signing identity so existing GitHub-installed copies can be updated in place.
+
+See [`docs/releasing.md`](docs/releasing.md) for signing setup, the pre-tag device/model gates, and
+the future Play migration rule.

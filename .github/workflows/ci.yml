@@ -52,14 +52,22 @@ jobs:
       - name: Build and lint
         run: ./gradlew build lint --stacktrace
 
-      - name: Verify release signing path
+      - name: Verify GitHub release signing path
+        id: signing
         shell: bash
         run: |
           set -euo pipefail
-          keystore="$RUNNER_TEMP/sailens-ci-upload.jks"
-          keytool -genkeypair -noprompt -storetype JKS -keystore "$keystore" -storepass ci-password -keypass ci-password -alias ci-upload -keyalg RSA -keysize 2048 -validity 3650 -dname "CN=Sailens CI, O=Sailens, C=US"
-          SAILENS_UPLOAD_KEYSTORE="$keystore" SAILENS_UPLOAD_STORE_PASSWORD=ci-password SAILENS_UPLOAD_KEY_ALIAS=ci-upload SAILENS_UPLOAD_KEY_PASSWORD=ci-password ./gradlew :app:bundleRelease -Psailens.versionName=0.0.1 -Psailens.versionCode=1 --no-configuration-cache --stacktrace
-          jarsigner -verify app/build/outputs/bundle/release/app-release.aab
+          keystore="$RUNNER_TEMP/sailens-ci-app-signing.jks"
+          keytool -genkeypair -noprompt -storetype JKS -keystore "$keystore" -storepass ci-password -keypass ci-password -alias ci-app-signing -keyalg RSA -keysize 2048 -validity 3650 -dname "CN=Sailens CI, O=Sailens, C=US"
+          SAILENS_APP_SIGNING_KEYSTORE="$keystore" SAILENS_APP_SIGNING_STORE_PASSWORD=ci-password SAILENS_APP_SIGNING_KEY_ALIAS=ci-app-signing SAILENS_APP_SIGNING_KEY_PASSWORD=ci-password ./gradlew :app:assembleRelease -Psailens.versionName=0.0.1 -Psailens.versionCode=1 --no-configuration-cache --stacktrace
+          apk="app/build/outputs/apk/release/app-release.apk"
+          test -s "$apk"
+          apksigner="$(find "$ANDROID_HOME/build-tools" -maxdepth 2 -type f -name apksigner | sort -V | tail -n 1)"
+          test -x "$apksigner"
+          "$apksigner" verify --verbose --print-certs "$apk" | tee "$RUNNER_TEMP/apksigner.txt"
+          cert_sha="$(sed -n 's/^.*certificate SHA-256 digest: //p' "$RUNNER_TEMP/apksigner.txt" | head -n 1 | tr '[:upper:]' '[:lower:]' | tr -d ':[:space:]')"
+          [[ "$cert_sha" =~ ^[0-9a-f]{64}$ ]]
+          echo "signing_cert_sha256=$cert_sha" >> "$GITHUB_OUTPUT"
 
       - name: Verify release manifest generation
         shell: bash
@@ -76,5 +84,5 @@ jobs:
           source_archive="dist/sailens-ci-source.tar.gz"
           tar -czf "$GITHUB_WORKSPACE/$source_archive" -C "$RUNNER_TEMP" "$(basename "$source_dir")"
           manifest="dist/release-manifest-ci.json"
-          python3 scripts/create-release-manifest.py --tag v0.0.1 --version-name 0.0.1 --version-code 1 --aab app/build/outputs/bundle/release/app-release.aab --source-archive "$source_archive" --output "$manifest"
-          python3 -c 'import json, pathlib, sys; data=json.loads(pathlib.Path(sys.argv[1]).read_text()); assert data["tag"] == "v0.0.1"; assert data["versionCode"] == 1; assert len(data["source"]["commit"]) == 40; assert len(data["source"]["platformCommit"]) == 40; assert len(data["models"]["semantic"]["sha256"]) == 64; assert len(data["models"]["detection"]["sha256"]) == 64; assert len(data["artifacts"]["appBundle"]["sha256"]) == 64; assert len(data["artifacts"]["correspondingSourceArchive"]["sha256"]) == 64' "$manifest"
+          python3 scripts/create-release-manifest.py --tag v0.0.1 --version-name 0.0.1 --version-code 1 --apk app/build/outputs/apk/release/app-release.apk --signing-cert-sha256 "${{ steps.signing.outputs.signing_cert_sha256 }}" --source-archive "$source_archive" --output "$manifest"
+          python3 -c 'import json, pathlib, sys; data=json.loads(pathlib.Path(sys.argv[1]).read_text()); assert data["schemaVersion"] == 2; assert data["tag"] == "v0.0.1"; assert data["versionCode"] == 1; assert data["channel"] == "github"; assert len(data["source"]["commit"]) == 40; assert len(data["source"]["platformCommit"]) == 40; assert len(data["models"]["semantic"]["sha256"]) == 64; assert len(data["models"]["detection"]["sha256"]) == 64; assert len(data["artifacts"]["apk"]["sha256"]) == 64; assert len(data["signing"]["certificateSha256"]) == 64; assert len(data["artifacts"]["correspondingSourceArchive"]["sha256"]) == 64' "$manifest"

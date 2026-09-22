@@ -20,22 +20,22 @@ val appVersionName = providers.gradleProperty("sailens.versionName")
     .map { value -> value.takeIf { it.isNotBlank() } ?: error("sailens.versionName must not be blank.") }
     .getOrElse("1.0")
 
-val uploadKeystorePath = providers.environmentVariable("SAILENS_UPLOAD_KEYSTORE")
-val uploadStorePassword = providers.environmentVariable("SAILENS_UPLOAD_STORE_PASSWORD")
-val uploadKeyAlias = providers.environmentVariable("SAILENS_UPLOAD_KEY_ALIAS")
-val uploadKeyPassword = providers.environmentVariable("SAILENS_UPLOAD_KEY_PASSWORD")
-val uploadSigningValues = listOf(
-    uploadKeystorePath,
-    uploadStorePassword,
-    uploadKeyAlias,
-    uploadKeyPassword,
+val appSigningKeystorePath = providers.environmentVariable("SAILENS_APP_SIGNING_KEYSTORE")
+val appSigningStorePassword = providers.environmentVariable("SAILENS_APP_SIGNING_STORE_PASSWORD")
+val appSigningKeyAlias = providers.environmentVariable("SAILENS_APP_SIGNING_KEY_ALIAS")
+val appSigningKeyPassword = providers.environmentVariable("SAILENS_APP_SIGNING_KEY_PASSWORD")
+val appSigningValues = listOf(
+    appSigningKeystorePath,
+    appSigningStorePassword,
+    appSigningKeyAlias,
+    appSigningKeyPassword,
 )
-val configuredUploadSigningValues = uploadSigningValues.count { it.isPresent }
-check(configuredUploadSigningValues == 0 || configuredUploadSigningValues == uploadSigningValues.size) {
-    "Release signing must configure all of SAILENS_UPLOAD_KEYSTORE, " +
-        "SAILENS_UPLOAD_STORE_PASSWORD, SAILENS_UPLOAD_KEY_ALIAS and SAILENS_UPLOAD_KEY_PASSWORD."
+val configuredAppSigningValues = appSigningValues.count { it.isPresent }
+check(configuredAppSigningValues == 0 || configuredAppSigningValues == appSigningValues.size) {
+    "App signing must configure all of SAILENS_APP_SIGNING_KEYSTORE, " +
+        "SAILENS_APP_SIGNING_STORE_PASSWORD, SAILENS_APP_SIGNING_KEY_ALIAS and SAILENS_APP_SIGNING_KEY_PASSWORD."
 }
-val releaseSigningConfigured = configuredUploadSigningValues == uploadSigningValues.size
+val appSigningConfigured = configuredAppSigningValues == appSigningValues.size
 val litertNpuRuntimeRoot = rootProject.layout.projectDirectory.dir("sailens/litert_npu_runtime_libraries_jit").asFile
 val litertNpuRuntimeFeatureModules = listOf(
     "qualcomm_runtime_v81",
@@ -104,12 +104,12 @@ android {
     }
 
     signingConfigs {
-        if (releaseSigningConfigured) {
+        if (appSigningConfigured) {
             create("release") {
-                storeFile = file(uploadKeystorePath.get())
-                storePassword = uploadStorePassword.get()
-                keyAlias = uploadKeyAlias.get()
-                keyPassword = uploadKeyPassword.get()
+                storeFile = file(appSigningKeystorePath.get())
+                storePassword = appSigningStorePassword.get()
+                keyAlias = appSigningKeyAlias.get()
+                keyPassword = appSigningKeyPassword.get()
             }
         }
     }
@@ -119,7 +119,7 @@ android {
             buildConfigField("boolean", "SHOW_DIAGNOSTICS", "true")
         }
         release {
-            if (releaseSigningConfigured) {
+            if (appSigningConfigured) {
                 signingConfig = signingConfigs.getByName("release")
             }
             buildConfigField("boolean", "SHOW_DIAGNOSTICS", "false")
