@@ -94,6 +94,7 @@ jobs:
           ./gradlew build lint :app:bundleRelease
           -Psailens.versionName="${{ steps.version.outputs.version_name }}"
           -Psailens.versionCode="${{ steps.version.outputs.version_code }}"
+          --no-configuration-cache
           --stacktrace
 
       - name: Verify signed app bundle
