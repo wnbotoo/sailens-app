@@ -41,10 +41,13 @@ jobs:
         run: python3 scripts/verify-distribution.py
 
       - name: Verify release tooling syntax
+        shell: bash
         run: |
+          set -euo pipefail
           python3 -m py_compile scripts/resolve-release-version.py scripts/create-release-manifest.py
-          test "$(python3 scripts/resolve-release-version.py v1.2.3)" =         run: ./gradlew build lint --stacktrace
-version_name=1.2.3\nversion_code=1002003'
+          output="$(python3 scripts/resolve-release-version.py v1.2.3)"
+          grep -qx 'version_name=1.2.3' <<< "$output"
+          grep -qx 'version_code=1002003' <<< "$output"
 
       - name: Build and lint
         run: ./gradlew build lint --stacktrace
