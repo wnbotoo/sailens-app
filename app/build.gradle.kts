@@ -8,6 +8,34 @@ plugins {
 val enableLitertNpuRuntime = providers.gradleProperty("sailens.enableLitertNpuRuntime")
     .map { it.toBooleanStrict() }
     .getOrElse(false)
+
+val appVersionCode = providers.gradleProperty("sailens.versionCode")
+    .map { value ->
+        value.toIntOrNull()
+            ?.takeIf { it in 1..2_100_000_000 }
+            ?: error("sailens.versionCode must be an integer in 1..2100000000 (was '$value').")
+    }
+    .getOrElse(1)
+val appVersionName = providers.gradleProperty("sailens.versionName")
+    .map { value -> value.takeIf { it.isNotBlank() } ?: error("sailens.versionName must not be blank.") }
+    .getOrElse("1.0")
+
+val uploadKeystorePath = providers.environmentVariable("SAILENS_UPLOAD_KEYSTORE")
+val uploadStorePassword = providers.environmentVariable("SAILENS_UPLOAD_STORE_PASSWORD")
+val uploadKeyAlias = providers.environmentVariable("SAILENS_UPLOAD_KEY_ALIAS")
+val uploadKeyPassword = providers.environmentVariable("SAILENS_UPLOAD_KEY_PASSWORD")
+val uploadSigningValues = listOf(
+    uploadKeystorePath,
+    uploadStorePassword,
+    uploadKeyAlias,
+    uploadKeyPassword,
+)
+val configuredUploadSigningValues = uploadSigningValues.count { it.isPresent }
+check(configuredUploadSigningValues == 0 || configuredUploadSigningValues == uploadSigningValues.size) {
+    "Release signing must configure all of SAILENS_UPLOAD_KEYSTORE, " +
+        "SAILENS_UPLOAD_STORE_PASSWORD, SAILENS_UPLOAD_KEY_ALIAS and SAILENS_UPLOAD_KEY_PASSWORD."
+}
+val releaseSigningConfigured = configuredUploadSigningValues == uploadSigningValues.size
 val litertNpuRuntimeRoot = rootProject.layout.projectDirectory.dir("sailens/litert_npu_runtime_libraries_jit").asFile
 val litertNpuRuntimeFeatureModules = listOf(
     "qualcomm_runtime_v81",
@@ -50,8 +78,8 @@ android {
         // DeviceHardwareProfileProvider, and keeps device reach broad for the GPU-only release.
         minSdk = 31
         targetSdk = 37
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = appVersionCode
+        versionName = appVersionName
 
         // Official distribution: this build bundles AGPL-3.0-covered model material, so users must
         // be pointed at THIS distribution's corresponding source, not the Apache-2.0 platform.
@@ -75,11 +103,25 @@ android {
         dynamicFeatures += availableLitertNpuRuntimeFeatures
     }
 
+    signingConfigs {
+        if (releaseSigningConfigured) {
+            create("release") {
+                storeFile = file(uploadKeystorePath.get())
+                storePassword = uploadStorePassword.get()
+                keyAlias = uploadKeyAlias.get()
+                keyPassword = uploadKeyPassword.get()
+            }
+        }
+    }
+
     buildTypes {
         debug {
             buildConfigField("boolean", "SHOW_DIAGNOSTICS", "true")
         }
         release {
+            if (releaseSigningConfigured) {
+                signingConfig = signingConfigs.getByName("release")
+            }
             buildConfigField("boolean", "SHOW_DIAGNOSTICS", "false")
             // R8 relies on the default native-methods keep rule plus the JNI keeps in
             // sailens-runtime/vision/guidance consumer-rules.pro. Smoke-test a release build on

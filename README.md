@@ -83,3 +83,13 @@ release gates are in [`docs/model-provenance.md`](docs/model-provenance.md).
 See [`docs/official-distribution.md`](docs/official-distribution.md). The authoritative
 cross-repository policy is also present in the pinned platform checkout at
 [`sailens/docs/distribution-model.md`](sailens/docs/distribution-model.md).
+
+## Releases
+
+Google Play releases use signed semantic-version tags such as `v1.0.0`. The release workflow
+builds a signed AAB, records the exact platform/model/artifact hashes in a release manifest, creates
+a GitHub Release, and uploads the same AAB to the Google Play **Internal testing** track. Promotion
+beyond Internal testing is intentionally manual.
+
+See [`docs/releasing.md`](docs/releasing.md) for the one-time Play/signing setup and the pre-tag
+device/model gates.
