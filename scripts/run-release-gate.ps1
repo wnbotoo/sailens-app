@@ -222,29 +222,29 @@ $StartLog = Join-Path $ReportDir "start.txt"
 $Logcat = Join-Path $ReportDir "logcat.txt"
 $CrashLog = Join-Path $ReportDir "crash.txt"
 
-@("
+@"
 # Sailens exact-artifact release gate — $Tag
 
 ## Candidate
 
 - Result: IN PROGRESS
-- Product commit: `$TagCommit`
-- Platform commit: `$($Manifest.source.platformCommit)`
-- Version name: `$VersionName`
-- Version code: `$VersionCode`
-- APK SHA-256: `$ApkSha`
-- App-signing certificate SHA-256: `$ApkCert`
+- Product commit: $TagCommit
+- Platform commit: $($Manifest.source.platformCommit)
+- Version name: $VersionName
+- Version code: $VersionCode
+- APK SHA-256: $ApkSha
+- App-signing certificate SHA-256: $ApkCert
 
 ## Device
 
-- Serial: `$script:DeviceSerial`
-- Manufacturer: `$DeviceManufacturer`
-- Model: `$DeviceModel`
-- Android: `$DeviceAndroid`
-- SDK: `$DeviceSdk`
-- ABI: `$DeviceAbi`
-- SoC manufacturer: `$DeviceSocManufacturer`
-- SoC model: `$DeviceSocModel`
+- Serial: $script:DeviceSerial
+- Manufacturer: $DeviceManufacturer
+- Model: $DeviceModel
+- Android: $DeviceAndroid
+- SDK: $DeviceSdk
+- ABI: $DeviceAbi
+- SoC manufacturer: $DeviceSocManufacturer
+- SoC model: $DeviceSocModel
 
 ## Machine checks
 
@@ -255,7 +255,7 @@ $CrashLog = Join-Path $ReportDir "crash.txt"
 - PASS: target device satisfies API/ABI floor.
 
 ## Manual checks
-") | Set-Content -Encoding UTF8 $script:Report
+"@ | Set-Content -Encoding UTF8 $script:Report
 
 Write-Host ""
 Write-Host "Installing exact draft APK on $DeviceModel ($script:DeviceSerial)..."
@@ -307,7 +307,7 @@ if (($crashOutput -join "`n") -match [regex]::Escape($PackageName)) { Fail "Cras
 $fatalPattern = "UnsatisfiedLinkError|No implementation found for|JNI DETECTED ERROR|dlopen failed|Fatal signal|SIG(SEGV|ABRT)"
 if (($logcatOutput -join "`n") -match $fatalPattern) { Fail "Native/JNI fatal pattern found; inspect $Logcat." }
 
-@("
+@"
 
 ## Final result
 
@@ -315,7 +315,7 @@ if (($logcatOutput -join "`n") -match $fatalPattern) { Fail "Native/JNI fatal pa
 
 Machine checks and explicitly accepted manual checks passed for the exact draft APK.
 This gate does not replace the broader target-user and Phase A guidance-validation work tracked in Sailens Android.
-") | Add-Content -Encoding UTF8 $script:Report
+"@ | Add-Content -Encoding UTF8 $script:Report
 
 Write-Host ""
 Write-Host "Release gate PASS."
