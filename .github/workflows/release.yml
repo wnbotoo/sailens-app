@@ -172,8 +172,3 @@ jobs:
             gh release create "$tag" "${{ steps.artifacts.outputs.apk }}" "${{ steps.artifacts.outputs.manifest }}" "${{ steps.artifacts.outputs.source_archive }}" --verify-tag --draft --generate-notes --title "Sailens ${{ steps.version.outputs.version_name }}"
           fi
 
-      - name: Publish GitHub Release
-        shell: bash
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: gh release edit "$GITHUB_REF_NAME" --draft=false
