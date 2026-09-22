@@ -22,28 +22,37 @@ are tracked as ordinary files. They are what makes this official distribution AG
 ## Provenance audit status
 
 The 2026-09-22 release audit separates the **canonical upstream checkpoint** for the recorded model
-identity from **export-artifact provenance**:
+identity from the **exact bundled export artifact**:
 
-- **Canonical upstream checkpoints are verified.** Ultralytics publishes `yolo26n.pt` and
+- **Canonical upstream model identities are verified.** Ultralytics publishes `yolo26n.pt` and
   `yolo26n-sem.pt` from the official `ultralytics/assets` `v8.4.0` release. The exact
-  checkpoint URLs and SHA-256 values for those recorded model identities are listed below. This
-  identifies the canonical upstream weights, but does **not** by itself prove that the bundled
-  TFLite bytes were exported from those exact checkpoint bytes.
-- **The bundled TFLite export chain is not yet reproducible.** Repository history retained the
-  bundled TFLite files, their hashes, filenames and technical contracts, but not the exact
-  `ultralytics` / `onnx2tf` / TensorFlow versions or the complete export invocation that
-  produced these bytes.
+  checkpoint URLs and SHA-256 values for those model identities are listed below. This identifies
+  the canonical upstream weights; the TFLite file format does not cryptographically bind itself to
+  a source-checkpoint SHA.
+- **The bundled artifacts identify their exporter.** Both TFLite files contain Ultralytics
+  `metadata.json` written by **Ultralytics 8.4.52**, including export timestamps, task, image
+  size and export arguments. Those values are recorded below and are printed by
+  `scripts/verify-distribution.py` in CI.
+- The selected files are the legacy onnx2tf `*_float16.tflite` siblings from a TFLite export
+  bundle. Their embedded metadata records the parent export invocation as `int8=true`,
+  `half=false`. In Ultralytics 8.4.52, that invocation asks onnx2tf to generate additional
+  integer-quantized artifacts while the float variants are still produced; the same export
+  metadata is appended to every generated TFLite. Therefore `int8=true` in metadata does **not**
+  mean these selected `*_float16.tflite` files have INT8 I/O. The tensor contract below remains
+  the authority for the selected artifact.
+- **Exact historical transitive exporter versions were not recorded.** The embedded metadata pins
+  Ultralytics itself, but not the exact TensorFlow / onnx2tf / ONNX dependency versions that were
+  present on 2026-06-03. Bit-for-bit regeneration of the old TFLite bytes is therefore not
+  guaranteed from historical tooling alone. This is an audit limitation, not a release-build
+  reproducibility gap: the exact TFLite bytes are source-controlled in this repository and CI
+  verifies their SHA-256 before building.
 - The public `ultralytics/yolo-flutter-app` release assets inspected during this audit, including
-  `v0.2.0` and `v0.3.5`, do not provide an exact filename/hash/size match for either bundled
-  FP16 TFLite. Those releases are therefore **context, not the download source for these exact
-  artifacts**.
-- **Public v1 release remains blocked on this provenance gap.** Before release, either reproduce
-  the current TFLite SHA-256 values from pinned source checkpoints and a pinned export toolchain, or
-  replace the bundled models with newly generated, fully pinned artifacts and repeat the semantic
-  channel-order and device runtime/performance release gates.
+  `v0.2.0` and `v0.3.5`, do not provide an exact filename/hash/size match for these two FP16
+  files. Those releases are **context, not the download source for these exact artifacts**.
 
-Do not turn a nearby upstream release into an exact source claim merely because its model family or
-technical contract looks compatible.
+For a future model replacement, pin the complete export environment and retain the recipe with the
+new artifact. A public release of the current model bundle still requires acceptance of the
+Cityscapes non-commercial terms and the manual semantic-order/device runtime gates below.
 
 ## sem.tflite
 
@@ -57,15 +66,17 @@ technical contract looks compatible.
 | Canonical checkpoint release | `ultralytics/assets` `v8.4.0` |
 | Canonical checkpoint URL | https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26n-sem.pt |
 | Canonical checkpoint sha256 | `f3f293cca764de1f93044030d8d5612de9c5ffbf37c9c8ea1b69418b73038999` |
-| Bundled TFLite download source | ⚠️ **Unresolved** — no exact match was found in the inspected public `ultralytics/yolo-flutter-app` release assets |
-| Model version / release tag | Canonical checkpoint: `ultralytics/assets v8.4.0`; exact bundled-TFLite derivation/export version: ⚠️ **unresolved** |
+| Bundled artifact derivation | Embedded metadata identifies a legacy Ultralytics **8.4.52** TFLite export; the exact artifact is retained in this repository and identified by the SHA-256 above. No separate upstream TFLite download URL is claimed |
+| Model version / release tag | Canonical checkpoint: `ultralytics/assets v8.4.0`; bundled artifact exporter: **Ultralytics 8.4.52** |
+| Embedded export timestamp | `2026-06-03T18:04:36.645162` |
+| Embedded parent export args | `task=semantic`, `batch=1`, `imgsz=640x640`, `data=cityscapes8.yaml`, `fraction=1.0`, `int8=true`, `half=false`, `nms=false`, `end2end=false` |
 | Code license | AGPL-3.0 (Ultralytics) |
 | Weights license | AGPL-3.0 (per Ultralytics' position; whether copyleft applies to weights is contested in the industry — this repository takes the strict reading of their claim) |
 | Training dataset | Cityscapes (19 trainId classes) |
 | Dataset license | 🔴 **NON-COMMERCIAL**. This constraint travels with the weights and is independent of any code license |
 | Redistribution | Permitted only subject to **both** layers: AGPL-3.0 obligations **and** Cityscapes' rule that a trained model may be distributed only as an abstract derivative that does not allow recovery of the dataset; commercial use of the dataset or derivative work is not permitted |
 | Commercial use | 🔴 **Not permitted** (Cityscapes dataset constraint). A free app has a "non-commercial" argument; **any commercialization, including selling hardware, requires replacing this with a sem model trained on commercially usable data** |
-| Export format | onnx2tf float16 export, NHWC |
+| Export format | Legacy Ultralytics TensorFlow/TFLite export via onnx2tf; selected `yolo26n-sem_float16.tflite` sibling, NHWC |
 | I/O | FLOAT32 `[1,640,640,3]` → `Identity` FLOAT32 `[1,640,640,19]` dense scores |
 | Runtime target | LiteRT, GPU |
 
@@ -81,15 +92,17 @@ technical contract looks compatible.
 | Canonical checkpoint release | `ultralytics/assets` `v8.4.0` |
 | Canonical checkpoint URL | https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26n.pt |
 | Canonical checkpoint sha256 | `9b09cc8bf347f0fc8a5f7657480587f25db09b34bf33b0652110fb03a8ad4fef` |
-| Bundled TFLite download source | ⚠️ **Unresolved** — no exact match was found in the inspected public `ultralytics/yolo-flutter-app` release assets |
-| Model version / release tag | Canonical checkpoint: `ultralytics/assets v8.4.0`; exact bundled-TFLite derivation/export version: ⚠️ **unresolved** |
+| Bundled artifact derivation | Embedded metadata identifies a legacy Ultralytics **8.4.52** TFLite export; the exact artifact is retained in this repository and identified by the SHA-256 above. No separate upstream TFLite download URL is claimed |
+| Model version / release tag | Canonical checkpoint: `ultralytics/assets v8.4.0`; bundled artifact exporter: **Ultralytics 8.4.52** |
+| Embedded export timestamp | `2026-06-03T19:59:11.798570` |
+| Embedded parent export args | `task=detect`, `batch=1`, `imgsz=640x640`, `data=coco128.yaml`, `fraction=1.0`, `int8=true`, `half=false`, `nms=false`, `end2end=false` |
 | Code license | AGPL-3.0 (Ultralytics) |
 | Weights license | AGPL-3.0 (as above) |
 | Training dataset | COCO (80 classes) |
 | Dataset license | Annotations are CC BY 4.0; images carry their own source terms. ⚠️ **Review before release** |
 | Redistribution | Permitted, under AGPL-3.0 |
 | Commercial use | Looser than sem (COCO has no non-commercial clause), but **still bound by the AGPL weights** |
-| Export format | onnx2tf float16 export, NHWC |
+| Export format | Legacy Ultralytics TensorFlow/TFLite export via onnx2tf; selected `yolo26n_float16.tflite` sibling, NHWC |
 | I/O | FLOAT32 `[1,640,640,3]` → `Identity` FLOAT32 `[1,84,8400]` (RAW_TRANSPOSED) |
 | Runtime target | LiteRT, GPU |
 
