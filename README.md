@@ -95,5 +95,5 @@ Google Play publication is currently **pending** while the developer account is 
 tag workflow does not call Google Play. When Play distribution is added later, it must preserve the
 same app-signing identity so existing GitHub-installed copies can be updated in place.
 
-See [`docs/releasing.md`](docs/releasing.md) for the pinned signing identity, exact-artifact device
-gate, publication steps, and future Play migration rule.
+See [`docs/release-policy.md`](docs/release-policy.md) for the versioning/signing/distribution
+contract and [`docs/releasing.md`](docs/releasing.md) for the exact operational release procedure.
