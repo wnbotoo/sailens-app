@@ -122,7 +122,7 @@ jobs:
           mkdir -p "$source_dir/sailens"
           git -C sailens archive HEAD | tar -x -C "$source_dir/sailens"
           source_archive="dist/sailens-$version-source.tar.gz"
-          tar -C "$RUNNER_TEMP" -czf "$source_archive" "$(basename "$source_dir")"
+          tar -czf "$GITHUB_WORKSPACE/$source_archive" -C "$RUNNER_TEMP" "$(basename "$source_dir")"
           manifest="dist/release-manifest.json"
           python3 scripts/create-release-manifest.py --tag "$GITHUB_REF_NAME" --version-name "$version" --version-code "${{ steps.version.outputs.version_code }}" --aab "$aab" --source-archive "$source_archive" --output "$manifest"
           echo "aab=$aab" >> "$GITHUB_OUTPUT"
