@@ -64,7 +64,7 @@ Every bundled model must document:
 1. Model name
 2. Model version
 3. Upstream project
-4. Download source
+4. Upstream source / derivation source (exact download URL when downloaded; otherwise the canonical source checkpoint plus export metadata/recipe)
 5. Code licence
 6. Weights licence
 7. Training dataset licence, if known
