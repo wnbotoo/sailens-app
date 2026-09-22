@@ -2,10 +2,9 @@
 
 # Official Sailens Android distribution positioning
 
-> Status: **Android product identity implemented; GitHub repository rename pending.** This is the
-> first-party Sailens Android distribution. Its Android identity is already the plain
-> `com.sailens` application ID. After final validation, rename the existing GitHub repository in
-> place from `sailens-yolo` to `sailens-app`.
+> Status: **Android product identity and GitHub repository rename implemented.** This is the
+> first-party Sailens Android distribution. Its Android identity is the plain `com.sailens`
+> application ID, and the repository is `wnbotoo/sailens-app`.
 
 The authoritative cross-repository decision is in Sailens Android:
 [`sailens/docs/distribution-model.md`](../sailens/docs/distribution-model.md).
@@ -27,7 +26,7 @@ This is not a second platform and not a fork of the platform. It should remain a
 
 | Item | Identity |
 |---|---|
-| Repository | `wnbotoo/sailens-app` after the pending in-place rename |
+| Repository | `wnbotoo/sailens-app` |
 | Product name | **Sailens** |
 | Android namespace | `com.sailens` |
 | applicationId | `com.sailens` |
@@ -72,8 +71,8 @@ the platform.
 ## 5. YOLO becomes provenance, not product branding
 
 This distribution was originally defined around its bundled YOLO models, which is why the old
-repository/product identity exposed "YOLO". The Android product branding has now been migrated;
-only the GitHub repository rename remains pending.
+repository/product identity exposed "YOLO". The Android product branding and GitHub repository
+rename have now both been completed.
 
 Model architecture is an implementation/provenance detail rather than the product identity:
 
@@ -94,7 +93,7 @@ This repository continues to consume Sailens Android from source:
 sailens-app
 ├── app/
 ├── app/src/main/assets/
-└── sailens/ -> wnbotoo/sailens-android @ exact main SHA
+└── sailens/ -> wnbotoo/sailens-android @ exact commit SHA
 ```
 
 `settings.gradle.kts` continues to use:
@@ -110,7 +109,7 @@ A product release should record:
 
 ```text
 Sailens v1.x.y
-├── Sailens Android @ <main SHA>
+├── Sailens Android @ <commit SHA>
 ├── semantic model @ <version/hash/provenance>
 ├── detection model @ <version/hash/provenance>
 └── official product configuration
