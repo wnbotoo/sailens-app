@@ -43,6 +43,10 @@ settings.gradle.kts          includeBuild("sailens") + Sailens Android's version
 The submodule commit is the platform version boundary for a product build. The `sailens-*`
 libraries are not published to Maven in the current phase.
 
+For the automatic and manual update procedure, including squash-merge handling and host-mirror
+validation, see [Updating the Sailens Android submodule](docs/updating-sailens-android.md)
+([简体中文](docs/updating-sailens-android.zh-CN.md)).
+
 ## Build
 
 ```bash
