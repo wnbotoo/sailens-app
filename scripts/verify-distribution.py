@@ -77,6 +77,74 @@ def embedded_ultralytics_metadata(path: Path) -> dict[str, object] | None:
     return metadata if isinstance(metadata, dict) else None
 
 
+# The host app here mirrors Sailens Android's reference host file for file: it is the platform's
+# composition root, copied because Gradle cannot share an app module. A submodule bump -- Dependabot
+# or by hand -- updates the platform but not this copy, and some drift does not fail the build: a
+# ProGuard keep rule missing here compiles fine and crashes the release build at launch. So the
+# contract is two-way:
+#
+#     host files here == pinned Sailens Android host files
+#                        + INTENTIONALLY_DIFFERENT
+#                        + MIRROR_EXCLUDED_DIRS
+#
+# Same-path files must match byte for byte, a file the platform added must be mirrored, and a file
+# the platform removed (or renamed away) must be removed here too -- a leftover DI module, resource
+# or manifest fragment still takes part in the build.
+MIRROR_ROOTS = ("app/src/main", "app/proguard-rules.pro")
+MIRROR_EXCLUDED_DIRS = ("app/src/main/assets",)  # the bundled weights; Sailens Android has none
+INTENTIONALLY_DIFFERENT = {
+    "app/src/main/java/com/sailens/app/SailensEdition.kt",  # what this edition promises
+    "app/src/main/res/values/strings.xml",  # product name
+}
+
+
+def is_excluded(relative: str) -> bool:
+    """True for a path inside an excluded directory -- at a directory boundary, so a sibling such
+    as app/src/main/assets-old is still mirrored."""
+    return any(relative == d or relative.startswith(d + "/") for d in MIRROR_EXCLUDED_DIRS)
+
+
+def mirrored_files(root: Path) -> set[str]:
+    files: set[str] = set()
+    for entry in MIRROR_ROOTS:
+        path = root / entry
+        if path.is_file():
+            files.add(entry)
+        elif path.is_dir():
+            for child in path.rglob("*"):
+                relative = child.relative_to(root).as_posix()
+                if child.is_file() and not is_excluded(relative):
+                    files.add(relative)
+    return files
+
+
+def check_host_mirror(errors: list[str], platform_root: Path) -> None:
+    ours = mirrored_files(ROOT)
+    theirs = mirrored_files(platform_root)
+    drifted = sorted(
+        path for path in (ours & theirs) - INTENTIONALLY_DIFFERENT
+        if (ROOT / path).read_bytes() != (platform_root / path).read_bytes()
+    )
+    missing_here = sorted(theirs - ours - INTENTIONALLY_DIFFERENT)
+    extra_here = sorted(ours - theirs - INTENTIONALLY_DIFFERENT)
+    for path in drifted:
+        errors.append(
+            f"{path} differs from the pinned Sailens Android copy; mirror the platform change "
+            f"(diff against {SUBMODULE_PATH}/{path}) or, if the difference is deliberate, add it "
+            "to INTENTIONALLY_DIFFERENT."
+        )
+    for path in missing_here:
+        errors.append(
+            f"Sailens Android added {path} to its host app; mirror it here or add it to "
+            "INTENTIONALLY_DIFFERENT."
+        )
+    for path in extra_here:
+        errors.append(
+            f"{path} no longer exists in the pinned Sailens Android host app; remove it here or, "
+            "if it is distribution-specific, add it to INTENTIONALLY_DIFFERENT."
+        )
+
+
 def main() -> int:
     errors: list[str] = []
 
@@ -138,6 +206,10 @@ def main() -> int:
             )
             if commit_check.returncode != 0:
                 errors.append(f"Submodule HEAD {submodule_head} is not a valid git commit.")
+            elif submodule_head == gitlink_sha:
+                # Only against the pinned commit: comparing with a checkout that is not the pin
+                # would report drift the pinned build does not have.
+                check_host_mirror(errors, submodule_root)
 
     settings = read("settings.gradle.kts")
     require_pattern(
