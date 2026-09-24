@@ -82,6 +82,22 @@ v2.0.0   -> versionCode 2000000
 A release tag must point to a commit reachable from `origin/main`.
 
 
+## Updating the Sailens Android platform pin
+
+The exact `sailens/` gitlink is a release identity boundary. Dependabot checks it daily, but every
+bump still requires review of the upstream commit range and the distribution host mirror. Manual
+updates are also supported, including the important case where a platform PR was squash-merged and
+the app must re-pin to the new post-merge `sailens-android/main` SHA.
+
+Use the dedicated bilingual runbook:
+
+- [Updating the Sailens Android submodule](updating-sailens-android.md)
+- [更新 Sailens Android submodule（简体中文）](updating-sailens-android.zh-CN.md)
+
+Do not create a product release tag while an intended platform bump is still pointing at a
+pre-merge feature-branch commit.
+
+
 ## Before creating a release tag
 
 Before tagging:
