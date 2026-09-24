@@ -3,6 +3,7 @@ package com.sailens.app
 import android.content.Context
 import com.google.ai.edge.litert.Accelerator
 import com.sailens.guidance.semantics.CityscapesNavigationSemantics
+import com.sailens.guidance.semantics.DetectionModelPreflight
 import com.sailens.guidance.semantics.SemanticModelPreflight
 import com.sailens.runtime.CatalogModelSourceResolver
 import com.sailens.runtime.ModelType
@@ -11,6 +12,7 @@ import com.sailens.shell.app.DescribeSpec
 import com.sailens.shell.app.GuidanceSpec
 import com.sailens.shell.app.SailensAppSpec
 import com.sailens.shell.app.StaticUnavailableReason
+import com.sailens.vision.detection.DetectionModelConfig
 import com.sailens.vision.taxonomy.CityscapesTaxonomy
 import com.sailens.vlm.SceneDescriber
 
@@ -37,6 +39,9 @@ fun sailensEditionSpec(
 ): SailensAppSpec = SailensAppSpec(
     guidance = GuidanceSpec(
         verifySemanticModel = { verifySemanticModel(context) },
+        // This build packages the detector too, and the default profile needs it: a missing or
+        // unreadable det.tflite must stop at the configuration screen, not fail after start.
+        verifyObstacleModel = { verifyObstacleModel(context) },
     ),
     describe = DescribeSpec(
         verifyEngine = {
@@ -77,5 +82,20 @@ private fun verifySemanticModel(context: Context): StaticUnavailableReason? {
                 declared = result.declared,
                 found = result.candidates,
             )
+    }
+}
+
+/** The detector's static check, in the same vocabulary as the semantic one. */
+private fun verifyObstacleModel(context: Context): StaticUnavailableReason? {
+    val result = DetectionModelPreflight.check(
+        context = context,
+        source = CatalogModelSourceResolver.source(ModelType.OBSTACLE_DETECTION, Accelerator.GPU),
+        classCount = DetectionModelConfig().classCount,
+    )
+    return when (result) {
+        DetectionModelPreflight.Result.Compatible -> null
+        DetectionModelPreflight.Result.ModelSourceMissing -> StaticUnavailableReason.ModelSourceMissing
+        is DetectionModelPreflight.Result.OutputUnreadable ->
+            StaticUnavailableReason.ModelOutputUnreadable(result.detail)
     }
 }
