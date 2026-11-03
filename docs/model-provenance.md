@@ -122,6 +122,10 @@ The checks the "Required steps" below ask for, as they came out for these two fi
 | sem class order | The embedded `names` are `CityscapesTaxonomy`'s 19 classes in the same order. On the CPU (LiteRT 2.1.5, x86-64), the argmax agrees with the legacy float16 export of the same checkpoint on 92–100% of pixels over four synthetic inputs; a permuted channel order would disagree almost everywhere |
 | det class order | The embedded `names` are the COCO 80 order; every id `CocoTaxonomy` names (person 0 … potted plant 58) carries that label |
 | det box units | On the CPU, over four synthetic inputs, every anchor's centre lies between 0.002 and 1.081 and every width and height below 1, so the boxes are `NORMALIZED`, the `DetectionModelConfig` default; no configuration change |
+| Model consistency check, OnePlus CPH2747 (SM8850, Android 16), LiteRT 2.1.5 GPU | **PASS**: sem GPU/CPU pixel agreement 0.964 on average, 0.933 on the lowest frame; det recall 1.0 with no extra detections (16 on the CPU, 16 on the GPU), pointed at the floor with an office chair in view. A first run without a detectable object in view was inconclusive (sem 0.940 / 0.873; det 7 of 7). The legacy export measured sem 0.391 and det 0 of 21 on the same phone |
+| Known scene, same device | A 31-second indoor Guidance session in the debug build: ground recognised on 77% of frames (the legacy export, on the GPU: 3%, with `building` dominant on 99% of frames); people and an office chair detected |
+| §12.3 red lines, same session | All hold: sem `native_score` with `outputReadTimeMs` 0 on all 547 sem runs; det `native_bbox_nms_float_handle` with `outputReadTimeMs` 0 on all 599 det runs; one of the two models reports `shared_native_yuv` on every frame |
+| Frame budget, same session | Slower than the legacy export, which was fast and wrong: pipeline 43 ms median (p90 58) against 28 ms (p90 37), 22 output frames/s with 27% of camera frames dropped against 29/s and 0.3%. The difference is in sem: its postprocess, which waits for the GPU result, takes 26 ms median against 15 |
 
 ## 🔴 The longest pole
 

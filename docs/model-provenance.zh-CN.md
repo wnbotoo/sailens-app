@@ -116,6 +116,10 @@ Sailens Android 的 `.gitignore` 忽略 `app/src/main/assets/*.tflite`——它�
 | sem 类别顺序 | 内嵌 `names` 就是 `CityscapesTaxonomy` 的 19 类，顺序相同。在 CPU 上（LiteRT 2.1.5，x86-64），四个合成输入上的 argmax 与同一 checkpoint 的 legacy float16 导出有 92–100% 的像素一致；通道顺序若被打乱，几乎处处都会不一致 |
 | det 类别顺序 | 内嵌 `names` 是 COCO 80 类的顺序；`CocoTaxonomy` 用到的每个 id（person 0 … potted plant 58）标签都对得上 |
 | det 框单位 | 在 CPU 上、四个合成输入里，所有 anchor 的中心都在 0.002 到 1.081 之间，宽高都小于 1，所以框是 `NORMALIZED`，即 `DetectionModelConfig` 的默认值；不用改配置 |
+| 模型一致性检查，OnePlus CPH2747（SM8850，Android 16），LiteRT 2.1.5 GPU | **PASS**：sem GPU/CPU 像素一致率平均 0.964，最低一帧 0.933；det 召回率 1.0，没有多检（CPU 16 个，GPU 16 个），对着地面、画面里有一把办公椅。第一次画面里没有能检出的物体，结果不确定（sem 0.940 / 0.873；det 7 个对 7 个）。legacy 导出在同一台手机上是 sem 0.391、det 21 个里 GPU 检出 0 个 |
+| 已知场景，同一台手机 | debug 包室内 Guidance 31 秒：77% 的帧识别到地面（legacy 导出在 GPU 上是 3%，99% 的帧以 `building` 为主）；检出了人和一把办公椅 |
+| §12.3 性能红线，同一次导航 | 全部成立：sem 547 次运行都是 `native_score`，`outputReadTimeMs` 都是 0；det 599 次运行都是 `native_bbox_nms_float_handle`，`outputReadTimeMs` 都是 0；每一帧都有一个模型报告 `shared_native_yuv` |
+| 帧耗时，同一次导航 | 比 legacy 导出慢（后者快但算错）：管线中位数 43 ms（p90 58），legacy 是 28 ms（p90 37）；每秒输出 22 帧、丢弃 27% 的相机帧，legacy 是 29 帧、0.3%。差别在 sem：它的后处理要等 GPU 结果，中位数 26 ms，legacy 是 15 ms |
 
 ## 🔴 最长的那根杆
 
