@@ -11,10 +11,11 @@ import com.sailens.guidance.config.AnalysisConfig
 import com.sailens.guidance.kernel.NavigationScorePostprocessor
 import com.sailens.guidance.semantics.CityscapesNavigationSemantics
 import com.sailens.runtime.CatalogModelSourceResolver
-import com.sailens.runtime.ImageTensorLayout
 import com.sailens.runtime.ModelAcceleratorBackend
 import com.sailens.runtime.ModelAcceleratorSelectionMode
 import com.sailens.runtime.ModelType
+import com.sailens.runtime.TfliteModelMetadataReader
+import com.sailens.runtime.imageTensorSpec
 import com.sailens.runtime.session.AcceleratorSelection
 import com.sailens.runtime.session.LiteRtSession
 import com.sailens.runtime.session.LiteRtSessionFactory
@@ -48,11 +49,18 @@ class ZeroCopyEquivalenceTest {
     @Test
     fun semanticZeroCopyMatchesTheCopyingPath() = withSession(ModelType.SEMANTIC_SEGMENTATION) { session ->
         val postprocessor = NavigationScorePostprocessor(AnalysisConfig(), CityscapesNavigationSemantics, SilentLog)
+        // The packaged model's own score layout, resolved from its tensor table as the runtime does.
+        val scores = imageTensorSpec(
+            dimensions = TfliteModelMetadataReader.read(context, session.source)
+                .resolveSemanticOutputTensor(outputChannels = 19).shape,
+            expectedChannels = 19,
+            description = "semantic output",
+        )
         val spec = SemanticScoreSpec(
-            width = 640,
-            height = 640,
-            channels = 19,
-            layout = ImageTensorLayout.NHWC,
+            width = scores.width,
+            height = scores.height,
+            channels = scores.channels,
+            layout = scores.layout,
             content = SemanticContentRegion(140, 0, 360, 640),
         )
         val output = session.outputBuffers.single()

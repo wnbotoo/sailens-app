@@ -224,8 +224,14 @@ issue before promising cross-channel in-place updates.
 
 ## Model replacement rule
 
-The current historical TFLite files expose Ultralytics version and parent export arguments in their
-embedded metadata, but not every transitive exporter package version. Any future model replacement
-must preserve a stronger recipe: canonical input checkpoint/hash, exact export command, pinned
-Ultralytics/TensorFlow/onnx2tf/ONNX environment, output hash, semantic channel-order evidence and
-device runtime/performance evidence.
+A model replacement records, with the new artifact in `docs/model-provenance.md`: the canonical
+input checkpoint and its hash, the exact export command (or the upstream export script and its
+commit), the exporter environment, output hash, semantic channel-order evidence and device
+runtime/performance evidence (the "Required steps when changing a model" there).
+
+Pin every exporter package version that can be established, and say which cannot. An export made
+here pins its whole environment. An artifact taken unmodified from an upstream release also
+records its download URL and the release's server-side asset digest, which must equal the bundled
+file's sha256: the exact bytes are then retrievable from upstream, so transitive exporter versions
+that upstream did not record are an audit limitation, not a blocker. The current files are such an
+upstream artifact.
