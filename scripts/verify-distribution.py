@@ -269,6 +269,20 @@ def main() -> int:
         "Official distribution APP_SOURCE_URL must point to sailens-app.",
     )
 
+    # DetFirstConfig.LAUNCH failed its acceptance; no build type of this distribution may build it
+    # in, and none may read the reference host's -PdetFirst property.
+    det_first_fields = re.findall(
+        r'buildConfigField\(\s*"boolean"\s*,\s*"DET_FIRST_LAUNCH"\s*,\s*(.*?)\)\s*$',
+        app_gradle,
+        re.MULTILINE,
+    )
+    if len(det_first_fields) < 2 or any(value.strip() != '"false"' for value in det_first_fields):
+        errors.append(
+            'DET_FIRST_LAUNCH must be declared "false" in both the debug and the release build type.'
+        )
+    if re.search(r'gradleProperty\(\s*"detFirst"\s*\)', app_gradle):
+        errors.append("app/build.gradle.kts must not read the detFirst Gradle property.")
+
     if not SIGNING_CERT_PATH.is_file():
         errors.append("Pinned app-signing certificate fingerprint is missing.")
     else:

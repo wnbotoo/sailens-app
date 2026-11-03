@@ -135,3 +135,10 @@ now" for this problem being solved too.
    **Sailens Android has no weights and cannot verify these — this is the only place they can be
    checked.** §12.3 records which of them currently hold; a line already recorded as not holding
    there is a known pre-existing gap, not a regression from the new model.
+6. Run the debug build's **Model consistency check** (Settings → Diagnostics) on every supported
+   device: each model on its accelerator against the CPU, on live camera frames, judged by the
+   bounds in "Accelerator result consistency" in [`models.md`](../sailens/docs/models.md). A model
+   that runs on the GPU without an error can still answer wrongly there; Sailens Android has seen
+   onnx2tf NHWC exports do exactly that on SM8850 and SM8450. Run it again when the LiteRT version
+   or a supported device changes, not only the model. **Sailens Android has no weights, so for the
+   models this distribution ships, this is the only place it can run.**

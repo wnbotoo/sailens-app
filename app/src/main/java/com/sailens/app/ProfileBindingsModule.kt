@@ -12,6 +12,7 @@ import com.sailens.guidance.config.PipelinePerformanceBudget
 import com.sailens.guidance.config.TraceRuntimeConfig
 import com.sailens.shell.guidance.overlay.SceneOverlayConfig
 import com.sailens.shell.guidance.settings.PerceptionSettingsStore
+import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
 
 /**
@@ -23,8 +24,10 @@ import org.koin.dsl.module
  * cohesive preset" and "each consumer gets its slice".
  */
 val profileBindingsModule = module {
+    // Provenance for field captures (debug builds): which commit and model weights recorded the data.
+    single { readBuildIdentity(androidContext()) }
     single {
-        SailensRuntimeProfile.select(
+        SailensRuntimeProfile.standard(
             targetHardwareProfile = DeviceHardwareProfileProvider.detect(),
             enableDiagnostics = BuildConfig.SHOW_DIAGNOSTICS,
             // 设置页持久化的挡位选择；运行中的切换走 PerceptionProfileManager
@@ -34,7 +37,7 @@ val profileBindingsModule = module {
     single<CameraRuntimeConfig> { get<SailensRuntimeProfile>().camera }
     single<SemanticModelConfig> { get<SailensRuntimeProfile>().semanticModel }
     single<DetectionModelConfig> { get<SailensRuntimeProfile>().realtimeObstacleModel }
-    // The VLM's backend is the profile's call (the ultra tier reserves NPU for it); everything else
+    // The VLM's backend is the profile's call; everything else
     // about it — prompt, decode budget — is the model config's own default.
     single {
         VlmModelConfig(

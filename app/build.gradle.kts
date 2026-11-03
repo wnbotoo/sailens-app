@@ -1,3 +1,4 @@
+import java.security.MessageDigest
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -63,6 +64,64 @@ val availableLitertNpuRuntimeFeatures = litertNpuRuntimeFeatureModules
     .map { moduleName -> ":litert_npu_runtime_libraries_jit:$moduleName" }
     .toSet()
 
+// Build provenance for recorded data (field captures from debug builds): which code and which model
+// weights produced the APK. Here the weights are tracked and the platform is pinned, so this
+// repository's commit identifies all three; the hashes still record the weights actually packaged.
+//
+// Commit: HEAD, with "-dirty" when `git status --porcelain` lists anything -- modified or untracked
+// files alike, a sailens/ checkout that is not the pinned commit included. Empty when git is
+// unavailable (a source archive). Same command as Sailens Android's reference host, whose
+// scripts/test_build_identity.py locks its semantics.
+val buildGitSha: String = runCatching {
+    val sha = providers.exec { commandLine("git", "rev-parse", "HEAD") }
+        .standardOutput.asText.get().trim()
+    val dirty = providers.exec { commandLine("git", "status", "--porcelain") }
+        .standardOutput.asText.get().isNotBlank()
+    if (Regex("[0-9a-f]{40}").matches(sha)) sha + (if (dirty) "-dirty" else "") else ""
+}.getOrDefault("")
+
+/**
+ * Writes `build_provenance.json` into a generated assets directory: the commit and the SHA-256 of
+ * every packaged `.tflite`. Hashing happens here, once per changed model, never at capture time.
+ */
+abstract class GenerateBuildProvenance : DefaultTask() {
+    @get:Input
+    abstract val gitSha: Property<String>
+
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.NAME_ONLY)
+    abstract val models: ConfigurableFileCollection
+
+    @get:OutputDirectory
+    abstract val outputDir: DirectoryProperty
+
+    @TaskAction
+    fun generate() {
+        val hashes = models.files.filter { it.isFile }.sortedBy { it.name }.map { file ->
+            val digest = MessageDigest.getInstance("SHA-256")
+            file.inputStream().use { input ->
+                val buffer = ByteArray(1 shl 16)
+                while (true) {
+                    val read = input.read(buffer)
+                    if (read < 0) break
+                    digest.update(buffer, 0, read)
+                }
+            }
+            file.name to "sha256:" + digest.digest().joinToString("") { "%02x".format(it) }
+        }
+        val artifacts = hashes.joinToString(",") { (name, hash) -> "\"$name\":\"$hash\"" }
+        val out = outputDir.get().asFile
+        out.mkdirs()
+        out.resolve("build_provenance.json")
+            .writeText("{\"gitSha\":\"${gitSha.get()}\",\"modelArtifacts\":{$artifacts}}\n")
+    }
+}
+
+val generateBuildProvenance = tasks.register<GenerateBuildProvenance>("generateBuildProvenance") {
+    gitSha.set(buildGitSha)
+    models.from(fileTree("src/main/assets") { include("*.tflite") })
+}
+
 android {
     namespace = "com.sailens"
     compileSdk = 37
@@ -118,12 +177,18 @@ android {
     buildTypes {
         debug {
             buildConfigField("boolean", "SHOW_DIAGNOSTICS", "true")
+            // DetFirstConfig.LAUNCH did not pass its acceptance (Sailens Android
+            // docs/experiments/detfirst-acceptance-2026-11.md). The reference host lets a debug
+            // build ask for it with -PdetFirst=launch; this distribution offers no such switch, in
+            // any build type. scripts/verify-distribution.py and BuildContractTest hold it off.
+            buildConfigField("boolean", "DET_FIRST_LAUNCH", "false")
         }
         release {
             if (appSigningConfigured) {
                 signingConfig = signingConfigs.getByName("release")
             }
             buildConfigField("boolean", "SHOW_DIAGNOSTICS", "false")
+            buildConfigField("boolean", "DET_FIRST_LAUNCH", "false")
             // R8 relies on the default native-methods keep rule plus the JNI keeps in
             // sailens-runtime/vision/guidance consumer-rules.pro. Smoke-test a release build on
             // device before relying on it: name-based JNI / reflection break at runtime, not build.
@@ -152,6 +217,12 @@ android {
             // NOTE: native-lib load failures surface at runtime, not build — smoke-test a release build.
             useLegacyPackaging = enableLitertNpuRuntime
         }
+    }
+}
+
+androidComponents {
+    onVariants { variant ->
+        variant.sources.assets?.addGeneratedSourceDirectory(generateBuildProvenance, GenerateBuildProvenance::outputDir)
     }
 }
 
