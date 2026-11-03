@@ -121,3 +121,8 @@ Sailens Android 的 `.gitignore` 忽略 `app/src/main/assets/*.tflite`——它�
    `det: postprocessBackend = "native_bbox_nms_float_handle"`。
    **Sailens Android 没有权重、验不了这几条，只能在这里验。**§12.3 记录了其中哪几条目前成立；那里
    已经记为不成立的，是既有的已知缺口，不是换模型造成的回归。
+6. 在每台支持的设备上跑 debug 版的**模型一致性检查**（设置 → 诊断）：每个模型在它的加速器上和
+   CPU 上各算一遍真实相机帧，按 [`models.zh-CN.md`](../sailens/docs/models.zh-CN.md)“加速器结果一致性”
+   一节的门槛判定。模型在 GPU 上不报错，也可能算错；Sailens Android 见过 onnx2tf 的 NHWC 导出在
+   SM8850 和 SM8450 上正是这样。换 LiteRT 版本或换支持的设备时也要重跑，不只是换模型。
+   **Sailens Android 没有权重，这个发行版自带的模型只能在这里查。**

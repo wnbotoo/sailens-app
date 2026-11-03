@@ -1,8 +1,14 @@
 package com.sailens.app
 
+import com.sailens.shell.guidance.settings.PhoneGeometryStore
+import com.sailens.BuildConfig
+import com.sailens.guidance.config.AnalysisConfig
+import com.sailens.guidance.geometry.CameraFactsSource
+import com.sailens.guidance.repository.DeviceSensorRepository
 import com.sailens.guidance.processor.analysis.ConnectivityAnalysisProcessor
 import com.sailens.guidance.processor.analysis.ConnectivityChecker
 import com.sailens.guidance.processor.analysis.CrossValidator
+import com.sailens.guidance.processor.analysis.GroundRecognitionAnalyzer
 import com.sailens.guidance.processor.analysis.GroundTypeDetector
 import com.sailens.guidance.processor.analysis.ObstacleOcclusionAnalyzer
 import com.sailens.guidance.processor.analysis.RoadSafetyAnalyzer
@@ -18,6 +24,10 @@ import com.sailens.guidance.processor.perception.PerceptionProfileManager
 import com.sailens.guidance.processor.perception.SegmentationAnalysisProcessor
 import com.sailens.guidance.processor.perception.SegmentationAnalyzer
 import com.sailens.guidance.usecase.decision.DecideEventsUseCase
+import com.sailens.guidance.usecase.decision.AcceptedPromptUseCase
+import com.sailens.guidance.usecase.decision.ConfirmDeliveredEventUseCase
+import com.sailens.guidance.usecase.decision.ReportCutPromptUseCase
+import com.sailens.guidance.usecase.decision.ReportHeardAfterCutUseCase
 import com.sailens.guidance.usecase.decision.RevokeUndeliveredEventUseCase
 import com.sailens.guidance.usecase.perception.AnalyzeSceneUseCase
 import com.sailens.guidance.usecase.perception.ProcessFrameUseCase
@@ -31,8 +41,12 @@ import com.sailens.guidance.usecase.trace.EvaluateTraceReplayBudgetUseCase
 import com.sailens.guidance.usecase.trace.ListTraceSessionsUseCase
 import com.sailens.guidance.usecase.trace.LoadLatestTraceReplayReportUseCase
 import com.sailens.guidance.usecase.trace.LoadTraceReplayReportUseCase
+import com.sailens.guidance.trace.capture.RegressionClocks
+import com.sailens.guidance.trace.regression.RegressionRecorder
+import com.sailens.guidance.trace.regression.recordingClock
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.qualifier.named
+import org.koin.core.scope.Scope
 import org.koin.dsl.module
 
 /**
@@ -49,7 +63,14 @@ val domainBindingsModule = module {
     single { ObstacleExtractor(config = get(), navigationSemantics = get()) }
     single { ObstacleTracker(config = get()) }
     // 设置页选择的挡位经由 manager 在下一次导航会话开始时生效
-    single { PerceptionProfileManager(initialConfig = get()) }
+    single {
+        PerceptionProfileManager(initialConfig = get()).apply {
+            // The ground-contact distance stays off in release: no way of carrying the phone has been
+            // validated for it in the field. In a debug build the diagnostics screen's switch,
+            // remembered across restarts, applies.
+            if (BuildConfig.DEBUG) selectGroundContact(get<PhoneGeometryStore>().choice.value.groundContactEnabled)
+        }
+    }
     single { RoadSafetyAnalyzer(config = get(), navigationSemantics = get()) }
     single { ObstacleOcclusionAnalyzer(config = get()) }
     single { GroundTypeDetector(config = get()) }
@@ -57,10 +78,21 @@ val domainBindingsModule = module {
     single { CrossValidator(config = get()) }
     // 有跨帧去抖状态，必须和其他 stabilizer 一样由 Start/Stop 对称 reset。
     single { FrameQualityAnalyzer() }
+    // 同上：有跨帧滞回状态，由 Start/Stop 对称 reset。进入/退出按时长判定，必须用单调时钟。
+    single {
+        GroundRecognitionAnalyzer(
+            config = get(),
+            navigationSemantics = get(),
+            clock = regressionRecorder().recordingClock(RegressionClocks.GROUND) { android.os.SystemClock.elapsedRealtime() },
+        )
+    }
     single { EventGenerator(config = get()) }
-    single { EventConflictResolver() }
+    single { EventConflictResolver(keepBlockedWithObstacle = get<AnalysisConfig>().detFirst.keepBlockedWithObstacle) }
     single { EventMerger() }
-    single { CooldownManager() }
+    single {
+        val detFirst = get<AnalysisConfig>().detFirst
+        CooldownManager(proximityEscalation = detFirst.proximityEscalation, retryInterrupted = detFirst.retryInterrupted, metricOnlyRepeatMs = detFirst.metricGate?.metricOnlyRepeatMs ?: 6_000L)
+    }
 
     // Use cases — new instance per resolution.
     // ProcessFrameUseCase is the exception: it holds per-session frame state (cached semantic
@@ -77,7 +109,8 @@ val domainBindingsModule = module {
             obstacleTracker = get(),
             // 调度间隔与轨迹 TTL 必须用单调时钟：墙钟（currentTimeMillis）会被
             // NTP 校时/手动改时间跳变，回跳会让过期轨迹迟迟不清、持续播报
-            clock = { android.os.SystemClock.elapsedRealtime() },
+            clock = regressionRecorder().recordingClock(RegressionClocks.PERCEPTION) { android.os.SystemClock.elapsedRealtime() },
+            regressionRecorder = regressionRecorder(),
         )
     }
     factory {
@@ -88,6 +121,7 @@ val domainBindingsModule = module {
             sceneClassifier = get(),
             crossValidator = get(),
             obstacleOcclusionAnalyzer = get(),
+            groundRecognitionAnalyzer = get(),
         )
     }
     factory {
@@ -99,10 +133,15 @@ val domainBindingsModule = module {
             deviceSensorRepository = get(),
             // 与 ProcessFrameUseCase 同理：冷却和过期都靠时间差，必须用单调时钟。shell 的 TTS 过期
             // 判定和状态卡片用的是同一个时钟（SystemClock.elapsedRealtime）。
-            clock = { android.os.SystemClock.elapsedRealtime() },
+            clock = regressionRecorder().recordingClock(RegressionClocks.DECIDE) { android.os.SystemClock.elapsedRealtime() },
+            regressionRecorder = regressionRecorder(),
         )
     }
-    factory { RevokeUndeliveredEventUseCase(cooldownManager = get()) }
+    factory { ConfirmDeliveredEventUseCase(cooldownManager = get()) }
+    factory { RevokeUndeliveredEventUseCase(cooldownManager = get(), regressionRecorder = regressionRecorder()) }
+    factory { ReportCutPromptUseCase(cooldownManager = get(), regressionRecorder = regressionRecorder()) }
+    factory { ReportHeardAfterCutUseCase(cooldownManager = get(), regressionRecorder = regressionRecorder()) }
+    factory { AcceptedPromptUseCase(cooldownManager = get()) }
     factory {
         StartSceneAnalysisUseCase(
             profileManager = get(),
@@ -116,6 +155,12 @@ val domainBindingsModule = module {
             traceService = get(),
             traceRuntimeConfig = get(),
             pipelineBudget = get(),
+            regressionRecorder = regressionRecorder(),
+            orientationSource = get(),
+            // A host without a camera-facts binding runs Guidance without geometry.
+            cameraFactsSource = getOrNull() ?: CameraFactsSource { null },
+            phoneGeometry = get<PhoneGeometryStore>().let { store -> store::current },
+            isStationary = get<DeviceSensorRepository>().let { sensors -> { sensors.isStationary.value } },
         )
     }
     factory {
@@ -130,6 +175,7 @@ val domainBindingsModule = module {
             groundTypeDetector = get(),
             sceneClassifier = get(),
             frameQualityAnalyzer = get(),
+            groundRecognitionAnalyzer = get(),
             cooldownManager = get(),
             logService = get(),
         )
@@ -158,3 +204,6 @@ val domainBindingsModule = module {
     factory { LoadTraceReplayReportUseCase(get(), get()) }
     factory { LoadLatestTraceReplayReportUseCase(get(), get()) }
 }
+
+/** The model-regression recorder the debug shell binds; release binds none and records nothing. */
+private fun Scope.regressionRecorder(): RegressionRecorder = getOrNull<RegressionRecorder>() ?: RegressionRecorder.None
