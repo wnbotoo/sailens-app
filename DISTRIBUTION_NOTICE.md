@@ -24,15 +24,19 @@ identity, capability expectations and release material.
 
 ## Positioning: free, non-commercial, public-interest
 
-Sailens is a free, public-interest project. This distribution is **non-commercial, now and in the
-future**: it is offered free of charge, it is not sold, and it is not used for any commercial
-purpose, including bundling with paid hardware or services. Its bundled models are chosen on that
-basis: the YOLO models under AGPL-3.0, and a semantic model trained on Cityscapes, whose dataset
-terms do not permit commercial use.
+Sailens is a free, public-interest project. The maintainers maintain and release this distribution
+as a free and **permanently non-commercial** project: they offer it free of charge, they do not sell
+it, and they do not use it for any commercial purpose, including bundling it with paid hardware or
+services. This is the maintainers' commitment about how they run and release this distribution. It
+does not add any restriction to the rights granted by AGPL-3.0.
 
-If there is ever a commercial product, it will be a separate application with its own product
-identity and with models trained on commercially usable data. It will not be released from this
-repository.
+The bundled models are chosen on that basis, and each is additionally subject to its applicable
+upstream and dataset terms: the YOLO models under AGPL-3.0, and a semantic model trained on
+Cityscapes, whose dataset terms do not permit commercial use.
+
+If the maintainers ever make a commercial product, it will be a separate application with its own
+product identity and with models trained on commercially usable data. It will not be released from
+this repository.
 
 ## License boundary
 

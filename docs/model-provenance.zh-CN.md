@@ -46,7 +46,7 @@ Sailens Android 的 `.gitignore` 忽略 `app/src/main/assets/*.tflite`——它�
   `yolo26n-sem.pt`（URL 与 SHA-256 见下表）。上游脚本按名字加载 checkpoint；TFLite 格式本身
   不会把 source-checkpoint SHA 以可验证方式绑定进产物。
 
-本发行版定位为永久非商用（见 [`DISTRIBUTION_NOTICE.zh-CN.md`](../DISTRIBUTION_NOTICE.zh-CN.md)
+维护者把本发行版作为永久非商用的项目发布（见 [`DISTRIBUTION_NOTICE.zh-CN.md`](../DISTRIBUTION_NOTICE.zh-CN.md)
 的定位一节），公开发布即按这个定位接受 Cityscapes 非商用条款。
 
 ## sem.tflite
@@ -73,7 +73,7 @@ Sailens Android 的 `.gitignore` 忽略 `app/src/main/assets/*.tflite`——它�
 | 训练数据集 | Cityscapes（19 类 trainId） |
 | 数据集 license | 🔴 **非商用**。约束跟着权重走，与代码许可无关 |
 | 可否再分发 | 仅在**同时**满足两层约束时可：履行 AGPL-3.0 义务；并满足 Cityscapes 条款——trained model 只能作为不能恢复原数据的抽象 derivative 分发，且数据集或 derivative work 不得用于商业目的 |
-| 商业使用 | 🔴 **不可**（受 Cityscapes 数据集约束）。本发行版免费、永久非商用，正因如此才能打包这个模型。**任何商用（含卖硬件）都不在本仓库的范围内**：商业产品会是另一个应用，使用在可商用数据上训练的 sem 模型 |
+| 商业使用 | 🔴 **不可**（受 Cityscapes 数据集约束）。维护者把本发行版作为免费、永久非商用的项目发布，正因如此才能打包这个模型。**Cityscapes 条款不允许把这个模型用于商用（含随硬件出售）**：商业产品会是另一个应用，使用在可商用数据上训练的 sem 模型 |
 | 导出格式 | Ultralytics LiteRT 导出（`format=litert`：litert-torch + ai-edge-quantizer），`w8a32`（INT8 权重、FP32 激活），NCHW。选它而不选同一 checkpoint 的 legacy onnx2tf float16 NHWC 导出：后者在 LiteRT GPU 上不报错但算错（见 [`models.zh-CN.md`](../sailens/docs/models.zh-CN.md)“加速器结果一致性”） |
 | I/O | FLOAT32 `[1,3,640,640]` → FLOAT32 `[1,19,640,640]` 稠密分数（NCHW） |
 | 运行目标 | LiteRT，GPU |
@@ -125,7 +125,7 @@ Sailens Android 的 `.gitignore` 忽略 `app/src/main/assets/*.tflite`——它�
 ## 🔴 最长的那根杆
 
 **sem 的 Cityscapes 非商用约束就是本发行版非商用的原因，换仓库也改变不了**——它跟着**权重**
-走，跟代码许可无关。本发行版免费、一直非商用。**卖硬件是明确商用；商业产品会是另一个应用，使用在
+走，跟代码许可无关。维护者让本发行版保持免费、非商用。**卖硬件是明确商用；商业产品会是另一个应用，使用在
 可商用数据上训练的 sem 模型，绝不是本仓库的一次发布**。这与 A/B 分仓无关，别把"A 是 Apache 了"误当成这个问题也解决了。
 
 ## 换模型时必须做的事

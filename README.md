@@ -19,8 +19,11 @@ distribution licence comes from the current bundled-model/licensing choices. See
 
 ## Free and non-commercial
 
-Sailens is a free, public-interest project. This distribution is non-commercial and will stay that
-way; a commercial product, if there is ever one, would be a separate application with other models.
+Sailens is a free, public-interest project. The maintainers maintain and release this distribution
+as a free, permanently non-commercial project. That is their commitment about how they run and
+release it; it adds no restriction to the rights granted by AGPL-3.0, and the bundled models are
+additionally subject to their own upstream and dataset terms. A commercial product, if the
+maintainers ever make one, would be a separate application with other models.
 See [`DISTRIBUTION_NOTICE.md`](DISTRIBUTION_NOTICE.md) ([简体中文](DISTRIBUTION_NOTICE.zh-CN.md)).
 
 ## Safety
