@@ -17,6 +17,25 @@ import com.sailens.vision.detection.DetectionModelConfig
 import com.sailens.vision.semantic.SemanticModelConfig
 import com.sailens.vision.taxonomy.CityscapesTaxonomy
 import com.sailens.vlm.SceneDescriber
+import org.koin.android.ext.koin.androidContext
+import org.koin.dsl.module
+
+/**
+ * This edition's [SailensAppSpec], built from the bindings it checks: the semantic and the detection model's
+ * configs, and the resolver the runners use. The host's other files stay identical to the reference host's
+ * (`scripts/verify-distribution.py`), so this is where everything this edition varies goes.
+ */
+val editionModule = module {
+    single<SailensAppSpec> {
+        sailensEditionSpec(
+            context = androidContext(),
+            sceneDescriber = get(),
+            modelSourceResolver = get(),
+            semanticModel = get(),
+            obstacleModel = get(),
+        )
+    }
+}
 
 /**
  * What the official Sailens distribution offers.
