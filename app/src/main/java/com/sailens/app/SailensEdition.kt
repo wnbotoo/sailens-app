@@ -1,20 +1,41 @@
 package com.sailens.app
 
 import android.content.Context
-import com.google.ai.edge.litert.Accelerator
 import com.sailens.guidance.semantics.CityscapesNavigationSemantics
 import com.sailens.guidance.semantics.DetectionModelPreflight
 import com.sailens.guidance.semantics.SemanticModelPreflight
-import com.sailens.runtime.CatalogModelSourceResolver
+import com.sailens.runtime.ModelSource
+import com.sailens.runtime.ModelSourceResolver
 import com.sailens.runtime.ModelType
+import com.sailens.runtime.source
 import com.sailens.shell.app.CapabilityExpectations
 import com.sailens.shell.app.DescribeSpec
 import com.sailens.shell.app.GuidanceSpec
 import com.sailens.shell.app.SailensAppSpec
 import com.sailens.shell.app.StaticUnavailableReason
 import com.sailens.vision.detection.DetectionModelConfig
+import com.sailens.vision.semantic.SemanticModelConfig
 import com.sailens.vision.taxonomy.CityscapesTaxonomy
 import com.sailens.vlm.SceneDescriber
+import org.koin.android.ext.koin.androidContext
+import org.koin.dsl.module
+
+/**
+ * This edition's [SailensAppSpec], built from the bindings it checks: the semantic and the detection model's
+ * configs, and the resolver the runners use. The host's other files stay identical to the reference host's
+ * (`scripts/verify-distribution.py`), so this is where everything this edition varies goes.
+ */
+val editionModule = module {
+    single<SailensAppSpec> {
+        sailensEditionSpec(
+            context = androidContext(),
+            sceneDescriber = get(),
+            modelSourceResolver = get(),
+            semanticModel = get(),
+            obstacleModel = get(),
+        )
+    }
+}
 
 /**
  * What the official Sailens distribution offers.
@@ -32,16 +53,26 @@ import com.sailens.vlm.SceneDescriber
  * user presses start rather than after they have begun walking. What it cannot check is channel
  * *order* -- the models carry no labels, so which channel is `person` remains a manual release
  * gate (§6.2, docs/models.md).
+ *
+ * Each check reads the file its runner will load: [modelSourceResolver] is the instance this build
+ * binds for the runners, asked for the accelerator each model config is set to run on.
  */
 fun sailensEditionSpec(
     context: Context,
     sceneDescriber: SceneDescriber,
+    modelSourceResolver: ModelSourceResolver,
+    semanticModel: SemanticModelConfig,
+    obstacleModel: DetectionModelConfig,
 ): SailensAppSpec = SailensAppSpec(
     guidance = GuidanceSpec(
-        verifySemanticModel = { verifySemanticModel(context) },
+        verifySemanticModel = {
+            verifySemanticModel(context, semanticPreflightSource(modelSourceResolver, semanticModel))
+        },
         // This build packages the detector too, and the default profile needs it: a missing or
         // unreadable det.tflite must stop at the configuration screen, not fail after start.
-        verifyObstacleModel = { verifyObstacleModel(context) },
+        verifyObstacleModel = {
+            verifyObstacleModel(context, obstaclePreflightSource(modelSourceResolver, obstacleModel), obstacleModel)
+        },
     ),
     describe = DescribeSpec(
         verifyEngine = {
@@ -57,16 +88,28 @@ fun sailensEditionSpec(
     ),
 )
 
+/** The source the semantic runner loads, so the static check looks at that file and no other. */
+internal fun semanticPreflightSource(
+    modelSourceResolver: ModelSourceResolver,
+    semanticModel: SemanticModelConfig,
+): ModelSource = modelSourceResolver.source(ModelType.SEMANTIC_SEGMENTATION, semanticModel.acceleratorBackend)
+
+/** The source the detection runner loads. */
+internal fun obstaclePreflightSource(
+    modelSourceResolver: ModelSourceResolver,
+    obstacleModel: DetectionModelConfig,
+): ModelSource = modelSourceResolver.source(ModelType.OBSTACLE_DETECTION, obstacleModel.acceleratorBackend)
+
 /**
  * Translates the Guidance pipeline's own verdict into the shell's vocabulary.
  *
  * The shell owns the reasons it can present and speak; what makes a semantic model usable is a
  * Guidance question, answered by Guidance (§6.11).
  */
-private fun verifySemanticModel(context: Context): StaticUnavailableReason? {
+private fun verifySemanticModel(context: Context, source: ModelSource): StaticUnavailableReason? {
     val result = SemanticModelPreflight.check(
         context = context,
-        source = CatalogModelSourceResolver.source(ModelType.SEMANTIC_SEGMENTATION, Accelerator.GPU),
+        source = source,
         taxonomy = CityscapesTaxonomy,
         semantics = CityscapesNavigationSemantics,
     )
@@ -86,11 +129,15 @@ private fun verifySemanticModel(context: Context): StaticUnavailableReason? {
 }
 
 /** The detector's static check, in the same vocabulary as the semantic one. */
-private fun verifyObstacleModel(context: Context): StaticUnavailableReason? {
+private fun verifyObstacleModel(
+    context: Context,
+    source: ModelSource,
+    obstacleModel: DetectionModelConfig,
+): StaticUnavailableReason? {
     val result = DetectionModelPreflight.check(
         context = context,
-        source = CatalogModelSourceResolver.source(ModelType.OBSTACLE_DETECTION, Accelerator.GPU),
-        classCount = DetectionModelConfig().classCount,
+        source = source,
+        classCount = obstacleModel.classCount,
     )
     return when (result) {
         DetectionModelPreflight.Result.Compatible -> null

@@ -2,10 +2,9 @@ package com.sailens.app
 
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
-import androidx.compose.ui.platform.LocalContext
 import com.sailens.BuildConfig
 import com.sailens.shell.app.ConfigurationFailureSignal
+import com.sailens.shell.app.SailensAppSpec
 import com.sailens.shell.app.SailensRoot
 import com.sailens.shell.device.ScreenReaderAnnouncer
 import org.koin.androidx.compose.koinViewModel
@@ -18,13 +17,10 @@ fun App(
 ) {
     // appViewModel is resolved for its side effect: it starts/stops device-sensor observation for
     // the lifetime of the app's root composition. Theming + navigation live in SailensRoot.
-    val context = LocalContext.current
-    val sceneDescriber = koinInject<com.sailens.vlm.SceneDescriber>()
     val failureSignal = koinInject<ConfigurationFailureSignal>()
     val screenReaderAnnouncer = koinInject<ScreenReaderAnnouncer>()
-    val spec = remember(context, sceneDescriber) {
-        sailensEditionSpec(context = context, sceneDescriber = sceneDescriber)
-    }
+    // What this edition offers and promises (SailensEdition.kt).
+    val spec = koinInject<SailensAppSpec>()
 
     SailensRoot(
         windowSizeClass = windowSizeClass,

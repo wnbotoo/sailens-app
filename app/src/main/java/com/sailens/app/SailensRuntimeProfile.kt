@@ -2,6 +2,9 @@ package com.sailens.app
 
 import com.sailens.camera.CameraRuntimeConfig
 import com.sailens.runtime.ModelAcceleratorBackend
+import com.sailens.runtime.session.GpuPrecision
+import com.sailens.runtime.session.GpuQueuePriority
+import com.sailens.vision.depth.DepthModelConfig
 import com.sailens.vision.detection.DetectionModelConfig
 import com.sailens.vision.semantic.SemanticModelConfig
 import com.sailens.BuildConfig
@@ -10,6 +13,7 @@ import com.sailens.guidance.config.DetFirstConfig
 import com.sailens.guidance.config.PerceptionConfig
 import com.sailens.guidance.config.PipelinePerformanceBudget
 import com.sailens.guidance.config.TraceRuntimeConfig
+import com.sailens.guidance.depth.geometry.DepthGeometryConfig
 import com.sailens.guidance.model.common.ObstacleProviderType
 import com.sailens.guidance.model.common.PerceptionProfile
 import com.sailens.shell.guidance.overlay.SceneOverlayConfig
@@ -42,6 +46,10 @@ data class SailensRuntimeProfile(
     val camera: CameraRuntimeConfig,
     val semanticModel: SemanticModelConfig,
     val realtimeObstacleModel: DetectionModelConfig,
+    /** The optional depth model's run choices; with no `depth.tflite` nothing loads (docs/models.md). */
+    val depthModel: DepthModelConfig,
+    /** The depth lane's cadence and limits; whether it runs is the debug switch's call, off by default. */
+    val depthGeometry: DepthGeometryConfig,
     val vlmModelBackend: ModelAcceleratorBackend,
     val perception: PerceptionConfig,
     val analysis: AnalysisConfig,
@@ -72,6 +80,14 @@ data class SailensRuntimeProfile(
                 realtimeObstacleModel = DetectionModelConfig(
                     acceleratorBackend = ModelAcceleratorBackend.GPU,
                 ),
+                // GPU FP16, LOW queue priority: the measured budget for the reference model on SM8850
+                // (docs/models.md). LOW lets sem/det's GPU work go first.
+                depthModel = DepthModelConfig(
+                    acceleratorBackend = ModelAcceleratorBackend.GPU,
+                    gpuPrecision = GpuPrecision.FP16,
+                    gpuPriority = GpuQueuePriority.LOW,
+                ),
+                depthGeometry = DepthGeometryConfig(targetFps = 3f, throttledFps = 1f),
                 vlmModelBackend = ModelAcceleratorBackend.GPU,
                 perception = PerceptionConfig.forProfile(
                     profile = perceptionProfile,
