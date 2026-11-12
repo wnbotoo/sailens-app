@@ -21,6 +21,15 @@ Sailens 官方发行版
 消费。可复用功能在 Sailens Android 中开发，并通过精确 submodule bump 进入这里。本仓库只负责
 薄产品 host、打包模型、产品 identity、capability expectation 与 release material。
 
+## 定位：公益、免费、非商用
+
+Sailens 是公益性的免费项目。本发行版**现在和以后都不做商用**：免费提供，不出售，也不用于任何商业
+目的，包括随付费硬件或服务捆绑。打包的模型就是按这个定位选的：YOLO 系模型按 AGPL-3.0，语义分割
+模型在 Cityscapes 上训练，而 Cityscapes 的数据集条款不允许商用。
+
+如果将来有商业产品，它会是另一个应用：有自己的产品身份，使用在可商用数据上训练的模型，不从本仓库
+发布。
+
 ## 许可边界
 
 Sailens Android 继续是 Apache-2.0，并且不带任何模型权重。

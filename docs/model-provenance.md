@@ -51,8 +51,9 @@ three things:
   The upstream script loads the checkpoint by name; the TFLite file format does not
   cryptographically bind itself to a source-checkpoint SHA.
 
-A public release of the current model bundle still requires acceptance of the Cityscapes
-non-commercial terms.
+This distribution is permanently non-commercial (see the positioning in
+[`DISTRIBUTION_NOTICE.md`](../DISTRIBUTION_NOTICE.md)); its public releases accept the Cityscapes
+non-commercial terms on that basis.
 
 ## sem.tflite
 
@@ -78,7 +79,7 @@ non-commercial terms.
 | Training dataset | Cityscapes (19 trainId classes) |
 | Dataset license | 🔴 **NON-COMMERCIAL**. This constraint travels with the weights and is independent of any code license |
 | Redistribution | Permitted only subject to **both** layers: AGPL-3.0 obligations **and** Cityscapes' rule that a trained model may be distributed only as an abstract derivative that does not allow recovery of the dataset; commercial use of the dataset or derivative work is not permitted |
-| Commercial use | 🔴 **Not permitted** (Cityscapes dataset constraint). A free app has a "non-commercial" argument; **any commercialization, including selling hardware, requires replacing this with a sem model trained on commercially usable data** |
+| Commercial use | 🔴 **Not permitted** (Cityscapes dataset constraint). This distribution is free and permanently non-commercial, which is what allows it to bundle this model. **Any commercial use, including selling hardware, is out of scope for this repository**: a commercial product would be a separate application with a sem model trained on commercially usable data |
 | Export format | Ultralytics LiteRT export (`format=litert`: litert-torch + ai-edge-quantizer), `w8a32` (INT8 weights, FP32 activations), NCHW. Chosen over the legacy onnx2tf float16 NHWC export of the same checkpoint, which runs on the LiteRT GPU without an error and computes wrongly there ("Accelerator result consistency" in [`models.md`](../sailens/docs/models.md)) |
 | I/O | FLOAT32 `[1,3,640,640]` → FLOAT32 `[1,19,640,640]` dense scores (NCHW) |
 | Runtime target | LiteRT, GPU |
@@ -129,11 +130,11 @@ The checks the "Required steps" below ask for, as they came out for these two fi
 
 ## 🔴 The longest pole
 
-**sem's Cityscapes non-commercial constraint is the hardest wall on this project's path to
-commercialization, and no amount of repository splitting solves it** — it travels with the
-**weights**, not the code license. Free distribution has a "non-commercial" argument; **selling
-hardware is unambiguously commercial, and at that point sem must be replaced with a model trained on
-commercially usable data.** This is unrelated to the A/B split — do not mistake "the core is Apache
+**sem's Cityscapes non-commercial constraint is why this distribution is non-commercial, and no
+amount of repository splitting changes that** — it travels with the **weights**, not the code
+license. This distribution is free and stays non-commercial. **Selling hardware is unambiguously
+commercial; a commercial product would be a separate application with a sem model trained on
+commercially usable data, never a release of this repository.** This is unrelated to the A/B split — do not mistake "the core is Apache
 now" for this problem being solved too.
 
 ## Required steps when changing a model

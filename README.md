@@ -17,6 +17,29 @@ distribution licence comes from the current bundled-model/licensing choices. See
 [`DISTRIBUTION_NOTICE.md`](DISTRIBUTION_NOTICE.md) and
 [`docs/model-provenance.md`](docs/model-provenance.md).
 
+## Free and non-commercial
+
+Sailens is a free, public-interest project. This distribution is non-commercial and will stay that
+way; a commercial product, if there is ever one, would be a separate application with other models.
+See [`DISTRIBUTION_NOTICE.md`](DISTRIBUTION_NOTICE.md) ([简体中文](DISTRIBUTION_NOTICE.zh-CN.md)).
+
+## Safety
+
+Sailens is an assistive tool. It does not replace a white cane, a guide dog or orientation and
+mobility training. Keep checking the way ahead the way you normally do.
+
+- No prompt does not mean the way ahead is clear.
+- It cannot see stairs, curbs or drops, and it does not guide you across roads.
+- It often misses glass doors, water and unusual objects such as sculptures, and it sees nothing
+  outside the camera's view.
+- When the screen turns off or the app goes to the background, the camera stops and nothing is
+  being detected.
+- Video is processed only on the phone and is not uploaded.
+
+What Guidance was tried under, what it does not support, and what you hear and feel when it cannot
+work: the [operating envelope](https://github.com/wnbotoo/sailens-android/blob/main/docs/guidance-operating-envelope.md)
+([简体中文](https://github.com/wnbotoo/sailens-android/blob/main/docs/guidance-operating-envelope.zh-CN.md)).
+
 ## Identity
 
 ```text
