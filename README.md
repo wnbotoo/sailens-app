@@ -28,16 +28,29 @@ See [`DISTRIBUTION_NOTICE.md`](DISTRIBUTION_NOTICE.md) ([简体中文](DISTRIBUT
 
 ## Safety
 
-Sailens is an assistive tool. It does not replace a white cane, a guide dog or orientation and
-mobility training. Keep checking the way ahead the way you normally do.
+The app shows this notice before guidance is started for the first time; after that it is under
+Safety in Settings.
 
-- No prompt does not mean the way ahead is clear.
-- It cannot see stairs, curbs or drops, and it does not guide you across roads.
-- It often misses glass doors, water and unusual objects such as sculptures, and it sees nothing
-  outside the camera's view.
-- When the screen turns off or the app goes to the background, the camera stops and nothing is
-  being detected.
-- Video is processed only on the phone and is not uploaded.
+1. Sailens is an assistive tool. It does not replace a white cane, a guide dog or orientation and
+   mobility training. Keep checking the way ahead the way you normally do.
+2. No prompt does not mean the way ahead is clear. Sailens cannot see stairs, curbs or drops, does
+   not guide you across roads, and sees nothing outside the camera's view. It may miss glass doors,
+   water and unusual objects such as sculptures; do not rely on it to rule these out.
+3. Use Sailens only while walking. It does not support running or any other way of moving. Hold the
+   phone upright at chest height, with the rear camera facing the way you are walking.
+4. When the screen turns off or the app goes to the background, the camera stops and nothing is
+   being detected.
+5. Video is processed only on the phone and is not uploaded.
+
+### 安全须知（简体中文）
+
+第一次开启辅助之前，应用会显示这份须知；之后在设置的“安全须知”里随时可以再看。
+
+1. Sailens 是辅助工具，不能替代盲杖、导盲犬或定向行走训练。请继续用你熟悉的方式确认前方安全。
+2. 没有提示不等于前方能走。Sailens 看不到楼梯、路缘和落差，不能指引过马路，也看不到摄像头视野以外的东西。玻璃门、水面和雕塑这类不常见的物体可能漏检，请不要依赖它排除这些危险。
+3. 只在步行时使用，不支持跑步或其他移动方式。请把手机竖着拿在胸前，后置摄像头朝向前进方向。
+4. 熄屏或切到后台时，摄像头会停止，什么都没有在检测。
+5. 画面只在这台手机上处理，不会上传。
 
 What Guidance was tried under, what it does not support, and what you hear and feel when it cannot
 work: the [operating envelope](https://github.com/wnbotoo/sailens-android/blob/main/docs/guidance-operating-envelope.md)
