@@ -21,29 +21,18 @@ are tracked as ordinary files. They are what makes this official distribution AG
 
 ## Provenance audit status
 
-Both files are **Ultralytics' own published LiteRT exports**, taken unmodified. The audit separates
-three things:
+Both files are **Ultralytics' own published LiteRT exports**, taken unmodified.
 
-- **The exact bundled bytes are an upstream release asset.** Each file is byte-identical to an asset
-  of the official `ultralytics/yolo-flutter-app` release `v0.6.6`: GitHub's server-side SHA-256
-  digest of the asset equals the sha256 recorded below. Both assets were uploaded on
-  `2026-07-23T20:19:03Z` by ultralytics/yolo-flutter-app#568, which re-exported and replaced all
-  35 LiteRT assets of that release. Release assets can be replaced, as #568 itself shows, so the
-  sha256 here, not the URL, is the identity of what this repository ships.
-- **The export recipe is the upstream script.** `scripts/export-tflite-models.py` at the #568
-  merge commit `42f141eec748` exports each model with
-  `YOLO("<model>.pt").export(format="litert", quantize="w8a32", nms=False, end2end=False, imgsz=640, batch=1)`:
-  Ultralytics' `format=litert` path (litert-torch conversion, ai-edge-quantizer), where `w8a32`
-  means INT8 weights with FP32 activations and needs no calibration data. The embedded
-  `metadata.json` agrees: written by **Ultralytics 8.4.104**, `args.quantize = "w8a32"`, and printed
-  by `scripts/verify-distribution.py` in CI.
-- **Exact transitive exporter versions are not recorded.** Ultralytics 8.4.104's `export-litert`
-  extra only requires `litert-torch>=0.9.0`, `ai-edge-litert>=2.1.4` and
-  `ai-edge-quantizer>=0.6.0`; neither the file (its flatbuffer carries no converter version) nor the
-  upstream release records which versions were installed. Bit-for-bit regeneration is therefore not
-  guaranteed. This is an audit limitation, not a release-build reproducibility gap: the exact bytes
-  are downloadable from upstream, source-controlled in this repository, and CI verifies their
-  SHA-256 before building.
+- **The bundled bytes match the official release assets.** GitHub lists the SHA-256 digests below
+  for both assets in the [Ultralytics Flutter v0.7.0 release](https://github.com/ultralytics/yolo-flutter-app/releases/expanded_assets/v0.7.0).
+  The hashes identify the bundled files if the upstream assets are replaced.
+- **The export settings come from upstream.** The
+  [export script at the v0.7.0 commit](https://github.com/ultralytics/yolo-flutter-app/blob/5c589835f436d14b74c1d503477c4ad455efe530/scripts/export-tflite-models.py)
+  uses `format=litert`, `quantize=w8a32`, `nms=None`, and batch 1. These two assets have 640×640
+  inputs and embedded metadata from **Ultralytics 8.4.188** with `end2end=false`. The `w8a32`
+  export uses INT8 weights with FP32 activations.
+- **The release records omit the exact transitive converter versions.** Builds use the exact
+  upstream assets stored here, and CI verifies their SHA-256 before building.
 - **Canonical upstream model identities are linked by identity, not by hash.** The embedded
   metadata identifies YOLO26n trained on COCO and YOLO26n-sem trained on Cityscapes, with class
   names in the contract's order. Ultralytics publishes those checkpoints as `yolo26n.pt` and
@@ -61,19 +50,19 @@ the Cityscapes non-commercial terms on that basis.
 |---|---|
 | Model name | `yolo26n-sem` |
 | Original file name | `yolo26n-sem_w8a32.tflite` |
-| sha256 | `d29dee0289f29be7e1446095e843109cdff7bdddba9bfd2ffd525425fbc5f557` |
-| Size | 1,748,412 bytes |
+| sha256 | `321652ea9ddc5cfd5c9f865673ca35c29acd921c02f300d25aa32d5c09f047d1` |
+| Size | 1,748,417 bytes |
 | Upstream project | Ultralytics YOLO26 |
 | Canonical upstream checkpoint | `yolo26n-sem.pt` |
 | Canonical checkpoint release | `ultralytics/assets` `v8.4.0` |
 | Canonical checkpoint URL | https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26n-sem.pt |
 | Canonical checkpoint sha256 | `f3f293cca764de1f93044030d8d5612de9c5ffbf37c9c8ea1b69418b73038999` |
-| Bundled artifact source | `ultralytics/yolo-flutter-app` release `v0.6.6` asset `yolo26n-sem_w8a32.tflite`, uploaded `2026-07-23T20:19:03Z` by ultralytics/yolo-flutter-app#568; its GitHub digest equals the sha256 above |
-| Bundled artifact URL | https://github.com/ultralytics/yolo-flutter-app/releases/download/v0.6.6/yolo26n-sem_w8a32.tflite |
-| Export recipe | `scripts/export-tflite-models.py` at `ultralytics/yolo-flutter-app@42f141eec748`: `format=litert`, `quantize=w8a32`, `nms=False`, `end2end=False`, `imgsz=640`, `batch=1` |
-| Model version / release tag | Canonical checkpoint: `ultralytics/assets v8.4.0`; bundled artifact: `yolo-flutter-app v0.6.6`, exported by **Ultralytics 8.4.104** |
-| Embedded export timestamp | `2026-07-23T20:42:42.194490` (exporter's local time, no zone) |
-| Embedded export args | `task=semantic`, `batch=1`, `imgsz=640x640`, `quantize=w8a32`, `data=null`, `fraction=1.0`, `end2end=false` |
+| Bundled artifact source | `ultralytics/yolo-flutter-app` release `v0.7.0` asset `yolo26n-sem_w8a32.tflite`, published with the SHA-256 above |
+| Bundled artifact URL | https://github.com/ultralytics/yolo-flutter-app/releases/download/v0.7.0/yolo26n-sem_w8a32.tflite |
+| Export recipe | `scripts/export-tflite-models.py` at `ultralytics/yolo-flutter-app@5c589835f436`, with `format=litert`, `quantize=w8a32`, `nms=None`, `imgsz=640`, `batch=1` |
+| Model version / release tag | Canonical checkpoint `ultralytics/assets v8.4.0`. Bundled artifact `yolo-flutter-app v0.7.0`, exported by **Ultralytics 8.4.188** |
+| Embedded export timestamp | `2026-10-24T22:33:23.249116+02:00` |
+| Embedded export metadata | `task=semantic`, `batch=1`, `imgsz=[640,640]`, `quantize=w8a32`, `data=null`, `fraction=1.0`, `end2end=false` |
 | Code license | AGPL-3.0 (Ultralytics; the embedded metadata states `AGPL-3.0 License`, and `ultralytics/yolo-flutter-app` is AGPL-3.0) |
 | Weights license | AGPL-3.0 (per Ultralytics' position; whether copyleft applies to weights is contested in the industry — this repository takes the strict reading of their claim) |
 | Training dataset | Cityscapes (19 trainId classes) |
@@ -82,7 +71,7 @@ the Cityscapes non-commercial terms on that basis.
 | Commercial use | 🔴 **Not permitted** (Cityscapes dataset constraint). The maintainers release this distribution free and permanently non-commercial, which is what allows it to bundle this model. **The Cityscapes terms do not permit commercial use of this model, including selling hardware with it**: a commercial product would be a separate application with a sem model trained on commercially usable data |
 | Export format | Ultralytics LiteRT export (`format=litert`: litert-torch + ai-edge-quantizer), `w8a32` (INT8 weights, FP32 activations), NCHW. Chosen over the legacy onnx2tf float16 NHWC export of the same checkpoint, which runs on the LiteRT GPU without an error and computes wrongly there ("Accelerator result consistency" in [`models.md`](../sailens/docs/models.md)) |
 | I/O | FLOAT32 `[1,3,640,640]` → FLOAT32 `[1,19,640,640]` dense scores (NCHW) |
-| Runtime target | LiteRT, GPU |
+| Runtime target | LiteRT 2.3.2, GPU |
 
 ## det.tflite
 
@@ -90,19 +79,19 @@ the Cityscapes non-commercial terms on that basis.
 |---|---|
 | Model name | `yolo26n` |
 | Original file name | `yolo26n_w8a32.tflite` |
-| sha256 | `d9cef07ce652ccfa9ce58e4ac8a4df98ff037739a9dad20a8afcae21b545df73` |
-| Size | 2,875,553 bytes |
+| sha256 | `15c3726c854de95b3b676aa677f7f57727cb61221012aa741a9cc383c1665e50` |
+| Size | 2,875,561 bytes |
 | Upstream project | Ultralytics YOLO26 |
 | Canonical upstream checkpoint | `yolo26n.pt` |
 | Canonical checkpoint release | `ultralytics/assets` `v8.4.0` |
 | Canonical checkpoint URL | https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26n.pt |
 | Canonical checkpoint sha256 | `9b09cc8bf347f0fc8a5f7657480587f25db09b34bf33b0652110fb03a8ad4fef` |
-| Bundled artifact source | `ultralytics/yolo-flutter-app` release `v0.6.6` asset `yolo26n_w8a32.tflite`, uploaded `2026-07-23T20:19:03Z` by ultralytics/yolo-flutter-app#568; its GitHub digest equals the sha256 above |
-| Bundled artifact URL | https://github.com/ultralytics/yolo-flutter-app/releases/download/v0.6.6/yolo26n_w8a32.tflite |
-| Export recipe | `scripts/export-tflite-models.py` at `ultralytics/yolo-flutter-app@42f141eec748`: `format=litert`, `quantize=w8a32`, `nms=False`, `end2end=False`, `imgsz=640`, `batch=1` |
-| Model version / release tag | Canonical checkpoint: `ultralytics/assets v8.4.0`; bundled artifact: `yolo-flutter-app v0.6.6`, exported by **Ultralytics 8.4.104** |
-| Embedded export timestamp | `2026-07-23T20:40:41.640955` (exporter's local time, no zone) |
-| Embedded export args | `task=detect`, `batch=1`, `imgsz=640x640`, `quantize=w8a32`, `data=null`, `fraction=1.0`, `end2end=false` |
+| Bundled artifact source | `ultralytics/yolo-flutter-app` release `v0.7.0` asset `yolo26n_w8a32.tflite`, published with the SHA-256 above |
+| Bundled artifact URL | https://github.com/ultralytics/yolo-flutter-app/releases/download/v0.7.0/yolo26n_w8a32.tflite |
+| Export recipe | `scripts/export-tflite-models.py` at `ultralytics/yolo-flutter-app@5c589835f436`, with `format=litert`, `quantize=w8a32`, `nms=None`, `imgsz=640`, `batch=1` |
+| Model version / release tag | Canonical checkpoint `ultralytics/assets v8.4.0`. Bundled artifact `yolo-flutter-app v0.7.0`, exported by **Ultralytics 8.4.188** |
+| Embedded export timestamp | `2026-10-24T22:30:24.588865+02:00` |
+| Embedded export metadata | `task=detect`, `batch=1`, `imgsz=[640,640]`, `quantize=w8a32`, `data=null`, `fraction=1.0`, `end2end=false` |
 | Code license | AGPL-3.0 (Ultralytics; as for sem) |
 | Weights license | AGPL-3.0 (as above) |
 | Training dataset | COCO (80 classes) |
@@ -111,7 +100,7 @@ the Cityscapes non-commercial terms on that basis.
 | Commercial use | Looser than sem (COCO has no non-commercial clause), but **still bound by the AGPL weights** |
 | Export format | Ultralytics LiteRT export (`format=litert`: litert-torch + ai-edge-quantizer), `w8a32` (INT8 weights, FP32 activations), NCHW. Chosen over the legacy onnx2tf float16 NHWC export, as for sem |
 | I/O | FLOAT32 `[1,3,640,640]` → FLOAT32 `[1,84,8400]` (RAW_TRANSPOSED); boxes in `NORMALIZED` units, the `DetectionModelConfig` default |
-| Runtime target | LiteRT, GPU |
+| Runtime target | LiteRT 2.3.2, GPU |
 
 ## Verification of the bundled files
 
@@ -120,13 +109,12 @@ The checks the "Required steps" below ask for, as they came out for these two fi
 | Check | Result |
 |---|---|
 | Tensor contract (`inspect_tflite.py`) | sem: one FLOAT32 input `[1,3,640,640]`, one FLOAT32 output `[1,19,640,640]`. det: one FLOAT32 input `[1,3,640,640]`, one FLOAT32 output `[1,84,8400]`. Single float output tensors, the contract the zero-copy fast paths need |
-| sem class order | The embedded `names` are `CityscapesTaxonomy`'s 19 classes in the same order. On the CPU (LiteRT 2.1.5, x86-64), the argmax agrees with the legacy float16 export of the same checkpoint on 92–100% of pixels over four synthetic inputs; a permuted channel order would disagree almost everywhere |
-| det class order | The embedded `names` are the COCO 80 order; every id `CocoTaxonomy` names (person 0 … potted plant 58) carries that label |
-| det box units | On the CPU, over four synthetic inputs, every anchor's centre lies between 0.002 and 1.081 and every width and height below 1, so the boxes are `NORMALIZED`, the `DetectionModelConfig` default; no configuration change |
-| Model consistency check, OnePlus CPH2747 (SM8850, Android 16), LiteRT 2.1.5 GPU | **PASS**: sem GPU/CPU pixel agreement 0.964 on average, 0.933 on the lowest frame; det recall 1.0 with no extra detections (16 on the CPU, 16 on the GPU), pointed at the floor with an office chair in view. A first run without a detectable object in view was inconclusive (sem 0.940 / 0.873; det 7 of 7). The legacy export measured sem 0.391 and det 0 of 21 on the same phone |
-| Known scene, same device | A 31-second indoor Guidance session in the debug build: ground recognised on 77% of frames (the legacy export, on the GPU: 3%, with `building` dominant on 99% of frames); people and an office chair detected |
-| §12.3 red lines, same session | All hold: sem `native_score` with `outputReadTimeMs` 0 on all 547 sem runs; det `native_bbox_nms_float_handle` with `outputReadTimeMs` 0 on all 599 det runs; one of the two models reports `shared_native_yuv` on every frame |
-| Frame budget, same session | Slower than the legacy export, which was fast and wrong: pipeline 43 ms median (p90 58) against 28 ms (p90 37), 22 output frames/s with 27% of camera frames dropped against 29/s and 0.3%. The difference is in sem: its postprocess, which waits for the GPU result, takes 26 ms median against 15 |
+| Class order | The embedded names match the established v0.6.6 Cityscapes 19 and COCO 80 orders. The SM8850 recording replay agrees with the v0.6.6 sem argmax on 99.88% of image pixels |
+| det box units | The raw centre coordinates and sizes remain in normalized units. Across four fixed CPU inputs, centres are about 0.004–1.04 and sizes reach about 1.03 before clipping |
+| Model consistency, OnePlus CPH2747 (SM8850, Android 17), LiteRT 2.3.2 | Passed on 8 live frames. The sem agreement was 97.64% on average and 96.54% on the lowest frame. All 16 CPU boxes matched, with zero extra GPU boxes |
+| §12.3 red lines, same device | sem used `native_score` and det used `native_bbox_nms_float_handle`. Both output-read timings were 0 ms, and the trace showed same-frame preprocessing reuse. The distribution's instrumented check matched the handle and array outputs |
+| Fixed indoor camera comparison, same device | With the depth lane and debug overlays off, two steady-state windows per arm measured 21.93 decisions/s and 26.90% dropped frames. The LiteRT 2.1.5 and v0.6.6 baseline measured 20.95 decisions/s and 30.18% |
+| Recorded-frame comparison, same device | 763 matched det boxes over 813 paired frames. The 575 walking frames had identical qualifications and selected prompts. All 20 selected prompts on 238 image-quality frames matched at the same frame when replayed with the same recorded clock |
 
 ## 🔴 The longest pole
 

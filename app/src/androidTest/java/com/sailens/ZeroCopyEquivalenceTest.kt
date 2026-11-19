@@ -136,7 +136,7 @@ class ZeroCopyEquivalenceTest {
 
     private fun handleOf(buffer: TensorBuffer): Long {
         val method = Class.forName("com.google.ai.edge.litert.JniHandle")
-            .getDeclaredMethod("getHandle\$third_party_odml_litert_litert_kotlin_litert_kotlin_api")
+            .getDeclaredMethod("getHandle\$third_party_odml_litert_litert_kotlin_litert_api_for_maven")
         method.isAccessible = true
         return method.invoke(buffer) as Long
     }

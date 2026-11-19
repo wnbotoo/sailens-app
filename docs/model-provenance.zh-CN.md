@@ -20,26 +20,17 @@ Sailens Android 的 `.gitignore` 忽略 `app/src/main/assets/*.tflite`——它�
 
 ## Provenance 审计状态
 
-两个文件都是 **Ultralytics 自己发布的 LiteRT 导出**，原样采用。审计分开三件事：
+两个文件都是 **Ultralytics 自己发布的 LiteRT 导出**，原样采用。
 
-- **打包的精确 bytes 就是上游 release asset。** 每个文件都和官方
-  `ultralytics/yolo-flutter-app` release `v0.6.6` 中的一个 asset 逐字节相同：GitHub 服务端
-  对该 asset 计算的 SHA-256 digest 等于下表记录的 sha256。两个 asset 都在
-  `2026-07-23T20:19:03Z` 由 ultralytics/yolo-flutter-app#568 上传，那个 PR 重新导出并替换了
-  该 release 的全部 35 个 LiteRT asset。Release asset 可以被替换（#568 本身就是一例），所以
-  本仓库所发内容的身份是这里的 sha256，不是 URL。
-- **导出配方是上游脚本。** #568 合并提交 `42f141eec748` 中的
-  `scripts/export-tflite-models.py` 对每个模型执行
-  `YOLO("<model>.pt").export(format="litert", quantize="w8a32", nms=False, end2end=False, imgsz=640, batch=1)`：
-  Ultralytics 的 `format=litert` 路径（litert-torch 转换、ai-edge-quantizer），`w8a32` 指 INT8
-  权重加 FP32 激活，不需要校准数据。文件内嵌的 `metadata.json` 与此一致：由
-  **Ultralytics 8.4.104** 写入，`args.quantize = "w8a32"`；CI 中的
-  `scripts/verify-distribution.py` 会把这些字段打印出来。
-- **没有记录确切的 transitive exporter 版本。** Ultralytics 8.4.104 的 `export-litert` extra
-  只要求 `litert-torch>=0.9.0`、`ai-edge-litert>=2.1.4`、`ai-edge-quantizer>=0.6.0`；文件本身
-  （flatbuffer 里没有转换器版本）和上游 release 都没有记录当时装的是哪个版本，因此不能保证
-  bit-for-bit 重新导出相同 bytes。这是审计上的限制，不是 release build 不可复现：精确 bytes
-  可以从上游下载，已由本仓库 Git 跟踪，CI 在构建前校验 SHA-256。
+- **打包文件与官方发布资产的字节一致。** GitHub 的
+  [Ultralytics Flutter v0.7.0 资产页](https://github.com/ultralytics/yolo-flutter-app/releases/expanded_assets/v0.7.0)
+  列出的两个 SHA-256 值与下表一致。若上游替换资产，仍可用哈希识别本仓库打包的文件。
+- **导出参数由上游提供。**
+  [v0.7.0 提交中的导出脚本](https://github.com/ultralytics/yolo-flutter-app/blob/5c589835f436d14b74c1d503477c4ad455efe530/scripts/export-tflite-models.py)
+  使用 `format=litert`、`quantize=w8a32`、`nms=None` 和 batch 1。这两个资产的输入尺寸是
+  640×640，嵌入元数据由 **Ultralytics 8.4.188** 写入，标注 `end2end=false`。
+  `w8a32` 使用 INT8 权重和 FP32 激活。
+- **上游发布记录未列出转换器的确切依赖版本。** 构建使用已跟踪的上游原始资产，CI 在构建前核对 SHA-256。
 - **官方 canonical model identity 按身份对应，不按 hash 绑定。** 内嵌 metadata 标明是在 COCO
   上训练的 YOLO26n 和在 Cityscapes 上训练的 YOLO26n-sem，类别名与契约顺序一致。Ultralytics
   在官方 `ultralytics/assets` `v8.4.0` release 中把这两个 checkpoint 发布为 `yolo26n.pt` 与
@@ -55,19 +46,19 @@ Sailens Android 的 `.gitignore` 忽略 `app/src/main/assets/*.tflite`——它�
 |---|---|
 | 模型名 | `yolo26n-sem` |
 | 原始文件名 | `yolo26n-sem_w8a32.tflite` |
-| sha256 | `d29dee0289f29be7e1446095e843109cdff7bdddba9bfd2ffd525425fbc5f557` |
-| 大小 | 1,748,412 字节 |
+| sha256 | `321652ea9ddc5cfd5c9f865673ca35c29acd921c02f300d25aa32d5c09f047d1` |
+| 大小 | 1,748,417 字节 |
 | 上游项目 | Ultralytics YOLO26 |
 | 官方 canonical checkpoint | `yolo26n-sem.pt` |
 | Canonical checkpoint release | `ultralytics/assets` `v8.4.0` |
 | Canonical checkpoint URL | https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26n-sem.pt |
 | Canonical checkpoint sha256 | `f3f293cca764de1f93044030d8d5612de9c5ffbf37c9c8ea1b69418b73038999` |
-| 打包产物来源 | `ultralytics/yolo-flutter-app` release `v0.6.6` 的 asset `yolo26n-sem_w8a32.tflite`，`2026-07-23T20:19:03Z` 由 ultralytics/yolo-flutter-app#568 上传；它的 GitHub digest 等于上面的 sha256 |
-| 打包产物 URL | https://github.com/ultralytics/yolo-flutter-app/releases/download/v0.6.6/yolo26n-sem_w8a32.tflite |
-| 导出配方 | `ultralytics/yolo-flutter-app@42f141eec748` 的 `scripts/export-tflite-models.py`：`format=litert`、`quantize=w8a32`、`nms=False`、`end2end=False`、`imgsz=640`、`batch=1` |
-| 模型版本 / release tag | Canonical checkpoint：`ultralytics/assets v8.4.0`；打包产物：`yolo-flutter-app v0.6.6`，由 **Ultralytics 8.4.104** 导出 |
-| Embedded export 时间 | `2026-07-23T20:42:42.194490`（导出者本地时间，无时区） |
-| Embedded 导出参数 | `task=semantic`、`batch=1`、`imgsz=640x640`、`quantize=w8a32`、`data=null`、`fraction=1.0`、`end2end=false` |
+| 打包产物来源 | `ultralytics/yolo-flutter-app` 的 `v0.7.0` 发布资产 `yolo26n-sem_w8a32.tflite` |
+| 打包产物 URL | https://github.com/ultralytics/yolo-flutter-app/releases/download/v0.7.0/yolo26n-sem_w8a32.tflite |
+| 导出配方 | `ultralytics/yolo-flutter-app@5c589835f436` 的 `scripts/export-tflite-models.py`，参数为 `format=litert`、`quantize=w8a32`、`nms=None`、`imgsz=640`、`batch=1` |
+| 模型版本 / release tag | 上游 checkpoint 为 `ultralytics/assets v8.4.0`，打包产物为 `yolo-flutter-app v0.7.0`，由 **Ultralytics 8.4.188** 导出 |
+| 内嵌导出时间 | `2026-10-24T22:33:23.249116+02:00` |
+| 内嵌导出元数据 | `task=semantic`、`batch=1`、`imgsz=[640,640]`、`quantize=w8a32`、`data=null`、`fraction=1.0`、`end2end=false` |
 | 代码 license | AGPL-3.0（Ultralytics；内嵌 metadata 写明 `AGPL-3.0 License`，`ultralytics/yolo-flutter-app` 也是 AGPL-3.0） |
 | 权重 license | AGPL-3.0（按 Ultralytics 的主张；权重是否适用 copyleft 在业界有争议，本仓库按其主张从严处理） |
 | 训练数据集 | Cityscapes（19 类 trainId） |
@@ -76,7 +67,7 @@ Sailens Android 的 `.gitignore` 忽略 `app/src/main/assets/*.tflite`——它�
 | 商业使用 | 🔴 **不可**（受 Cityscapes 数据集约束）。维护者把本发行版作为免费、永久非商用的项目发布，正因如此才能打包这个模型。**Cityscapes 条款不允许把这个模型用于商用（含随硬件出售）**：商业产品会是另一个应用，使用在可商用数据上训练的 sem 模型 |
 | 导出格式 | Ultralytics LiteRT 导出（`format=litert`：litert-torch + ai-edge-quantizer），`w8a32`（INT8 权重、FP32 激活），NCHW。选它而不选同一 checkpoint 的 legacy onnx2tf float16 NHWC 导出：后者在 LiteRT GPU 上不报错但算错（见 [`models.zh-CN.md`](../sailens/docs/models.zh-CN.md)“加速器结果一致性”） |
 | I/O | FLOAT32 `[1,3,640,640]` → FLOAT32 `[1,19,640,640]` 稠密分数（NCHW） |
-| 运行目标 | LiteRT，GPU |
+| 运行目标 | LiteRT 2.3.2，GPU |
 
 ## det.tflite
 
@@ -84,19 +75,19 @@ Sailens Android 的 `.gitignore` 忽略 `app/src/main/assets/*.tflite`——它�
 |---|---|
 | 模型名 | `yolo26n` |
 | 原始文件名 | `yolo26n_w8a32.tflite` |
-| sha256 | `d9cef07ce652ccfa9ce58e4ac8a4df98ff037739a9dad20a8afcae21b545df73` |
-| 大小 | 2,875,553 字节 |
+| sha256 | `15c3726c854de95b3b676aa677f7f57727cb61221012aa741a9cc383c1665e50` |
+| 大小 | 2,875,561 字节 |
 | 上游项目 | Ultralytics YOLO26 |
 | 官方 canonical checkpoint | `yolo26n.pt` |
 | Canonical checkpoint release | `ultralytics/assets` `v8.4.0` |
 | Canonical checkpoint URL | https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26n.pt |
 | Canonical checkpoint sha256 | `9b09cc8bf347f0fc8a5f7657480587f25db09b34bf33b0652110fb03a8ad4fef` |
-| 打包产物来源 | `ultralytics/yolo-flutter-app` release `v0.6.6` 的 asset `yolo26n_w8a32.tflite`，`2026-07-23T20:19:03Z` 由 ultralytics/yolo-flutter-app#568 上传；它的 GitHub digest 等于上面的 sha256 |
-| 打包产物 URL | https://github.com/ultralytics/yolo-flutter-app/releases/download/v0.6.6/yolo26n_w8a32.tflite |
-| 导出配方 | `ultralytics/yolo-flutter-app@42f141eec748` 的 `scripts/export-tflite-models.py`：`format=litert`、`quantize=w8a32`、`nms=False`、`end2end=False`、`imgsz=640`、`batch=1` |
-| 模型版本 / release tag | Canonical checkpoint：`ultralytics/assets v8.4.0`；打包产物：`yolo-flutter-app v0.6.6`，由 **Ultralytics 8.4.104** 导出 |
-| Embedded export 时间 | `2026-07-23T20:40:41.640955`（导出者本地时间，无时区） |
-| Embedded 导出参数 | `task=detect`、`batch=1`、`imgsz=640x640`、`quantize=w8a32`、`data=null`、`fraction=1.0`、`end2end=false` |
+| 打包产物来源 | `ultralytics/yolo-flutter-app` 的 `v0.7.0` 发布资产 `yolo26n_w8a32.tflite` |
+| 打包产物 URL | https://github.com/ultralytics/yolo-flutter-app/releases/download/v0.7.0/yolo26n_w8a32.tflite |
+| 导出配方 | `ultralytics/yolo-flutter-app@5c589835f436` 的 `scripts/export-tflite-models.py`，参数为 `format=litert`、`quantize=w8a32`、`nms=None`、`imgsz=640`、`batch=1` |
+| 模型版本 / release tag | 上游 checkpoint 为 `ultralytics/assets v8.4.0`，打包产物为 `yolo-flutter-app v0.7.0`，由 **Ultralytics 8.4.188** 导出 |
+| 内嵌导出时间 | `2026-10-24T22:30:24.588865+02:00` |
+| 内嵌导出元数据 | `task=detect`、`batch=1`、`imgsz=[640,640]`、`quantize=w8a32`、`data=null`、`fraction=1.0`、`end2end=false` |
 | 代码 license | AGPL-3.0（Ultralytics；同 sem） |
 | 权重 license | AGPL-3.0（同上） |
 | 训练数据集 | COCO（80 类） |
@@ -105,7 +96,7 @@ Sailens Android 的 `.gitignore` 忽略 `app/src/main/assets/*.tflite`——它�
 | 商业使用 | 比 sem 宽松（COCO 无非商用条款），但**仍受 AGPL 权重约束** |
 | 导出格式 | Ultralytics LiteRT 导出（`format=litert`：litert-torch + ai-edge-quantizer），`w8a32`（INT8 权重、FP32 激活），NCHW。不选 legacy onnx2tf float16 NHWC 导出，理由同 sem |
 | I/O | FLOAT32 `[1,3,640,640]` → FLOAT32 `[1,84,8400]`（RAW_TRANSPOSED）；框坐标是 `NORMALIZED` 单位，即 `DetectionModelConfig` 的默认值 |
-| 运行目标 | LiteRT，GPU |
+| 运行目标 | LiteRT 2.3.2，GPU |
 
 ## 打包文件的验证结果
 
@@ -114,13 +105,12 @@ Sailens Android 的 `.gitignore` 忽略 `app/src/main/assets/*.tflite`——它�
 | 检查 | 结果 |
 |---|---|
 | 张量契约（`inspect_tflite.py`） | sem：一个 FLOAT32 输入 `[1,3,640,640]`，一个 FLOAT32 输出 `[1,19,640,640]`。det：一个 FLOAT32 输入 `[1,3,640,640]`，一个 FLOAT32 输出 `[1,84,8400]`。都是单个 float 输出张量，即 zero-copy 快速路径要求的契约 |
-| sem 类别顺序 | 内嵌 `names` 就是 `CityscapesTaxonomy` 的 19 类，顺序相同。在 CPU 上（LiteRT 2.1.5，x86-64），四个合成输入上的 argmax 与同一 checkpoint 的 legacy float16 导出有 92–100% 的像素一致；通道顺序若被打乱，几乎处处都会不一致 |
-| det 类别顺序 | 内嵌 `names` 是 COCO 80 类的顺序；`CocoTaxonomy` 用到的每个 id（person 0 … potted plant 58）标签都对得上 |
-| det 框单位 | 在 CPU 上、四个合成输入里，所有 anchor 的中心都在 0.002 到 1.081 之间，宽高都小于 1，所以框是 `NORMALIZED`，即 `DetectionModelConfig` 的默认值；不用改配置 |
-| 模型一致性检查，OnePlus CPH2747（SM8850，Android 16），LiteRT 2.1.5 GPU | **PASS**：sem GPU/CPU 像素一致率平均 0.964，最低一帧 0.933；det 召回率 1.0，没有多检（CPU 16 个，GPU 16 个），对着地面、画面里有一把办公椅。第一次画面里没有能检出的物体，结果不确定（sem 0.940 / 0.873；det 7 个对 7 个）。legacy 导出在同一台手机上是 sem 0.391、det 21 个里 GPU 检出 0 个 |
-| 已知场景，同一台手机 | debug 包室内 Guidance 31 秒：77% 的帧识别到地面（legacy 导出在 GPU 上是 3%，99% 的帧以 `building` 为主）；检出了人和一把办公椅 |
-| §12.3 性能红线，同一次导航 | 全部成立：sem 547 次运行都是 `native_score`，`outputReadTimeMs` 都是 0；det 599 次运行都是 `native_bbox_nms_float_handle`，`outputReadTimeMs` 都是 0；每一帧都有一个模型报告 `shared_native_yuv` |
-| 帧耗时，同一次导航 | 比 legacy 导出慢（后者快但算错）：管线中位数 43 ms（p90 58），legacy 是 28 ms（p90 37）；每秒输出 22 帧、丢弃 27% 的相机帧，legacy 是 29 帧、0.3%。差别在 sem：它的后处理要等 GPU 结果，中位数 26 ms，legacy 是 15 ms |
+| 类别顺序 | 内嵌标签与 v0.6.6 的 Cityscapes 19 类、COCO 80 类顺序一致。SM8850 的录像回放与 v0.6.6 的 sem 类别图有 99.88% 的像素一致 |
+| det 框单位 | 原始框的中心和宽高仍用归一化单位。四个固定 CPU 输入里，中心坐标约为 0.004–1.04，裁剪前的宽高最大约为 1.03 |
+| 模型一致性检查，一加 CPH2747（SM8850，Android 17），LiteRT 2.3.2 | 通过 8 帧实景检查。sem 平均一致率 97.64%，最低单帧 96.54%。GPU 匹配了 CPU 的全部 16 个框，额外框为 0 |
+| §12.3 性能红线，同一台手机 | sem 使用 `native_score`，det 使用 `native_bbox_nms_float_handle`。两者的输出读回计时均为 0 ms，trace 中观察到同帧预处理复用。发行版的仪器测试确认 handle 与数组路径输出一致 |
+| 同一台手机固定室内机位对照 | 关闭深度车道和诊断叠层，每组两段稳态窗口。新版每秒输出 21.93 个决策，丢帧率 26.90%。LiteRT 2.1.5 和 v0.6.6 基线为 20.95 个决策和 30.18% |
+| 同一台手机录像对照 | 813 帧中配对了 763 个检测框。575 帧行走样本的资格判断与主提示一致。按同一录像时钟复核时，238 帧画质样本的 20 条主提示都在同一帧触发 |
 
 ## 🔴 最长的那根杆
 
