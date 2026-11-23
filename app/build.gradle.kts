@@ -221,6 +221,10 @@ android {
 }
 
 androidComponents {
+    // Exercise the edition binding with the release dependencies and BuildConfig.
+    beforeVariants(selector().withBuildType("release")) { variant ->
+        variant.hostTests.getValue("UnitTest").enable = true
+    }
     onVariants { variant ->
         variant.sources.assets?.addGeneratedSourceDirectory(generateBuildProvenance, GenerateBuildProvenance::outputDir)
     }
