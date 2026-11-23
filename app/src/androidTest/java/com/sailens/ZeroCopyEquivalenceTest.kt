@@ -23,6 +23,7 @@ import com.sailens.vision.detection.DetectionLayout
 import com.sailens.vision.detection.DetectionPostProcessor
 import com.sailens.vision.semantic.SemanticContentRegion
 import com.sailens.vision.semantic.SemanticScoreSpec
+import com.sailens.vision.semantic.SemanticScoreTiming
 import com.sailens.vision.semantic.SemanticScores
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -65,18 +66,29 @@ class ZeroCopyEquivalenceTest {
         )
         val output = session.outputBuffers.single()
 
-        val viaHandle = postprocessor.postprocessScores(
-            SemanticScores.FloatHandle(handleOf(output)), spec, IntArray(spec.content.pixelCount),
-        )
-        val viaCopy = postprocessor.postprocessScores(
+        val viaCopy = checkNotNull(postprocessor.postprocessScores(
             SemanticScores.FloatValues(output.readFloat()), spec, IntArray(spec.content.pixelCount),
-        )
+        ))
 
-        assertNotNull("the zero-copy path declined on this device", viaHandle)
-        assertNotNull(viaCopy)
-        assertTrue("the input should produce more than one class", viaCopy!!.value.mask.classMap.distinct().size > 1)
-        assertEquals(viaCopy.value.mask, viaHandle!!.value.mask)
-        assertEquals(viaCopy.value.stats, viaHandle.value.stats)
+        viaCopy.value.maskLease.use {
+            assertTrue("the input should produce more than one class", viaCopy.value.mask.classMap.distinct().size > 1)
+            val handle = handleOf(output)
+            for (paired in listOf(false, true)) {
+                val processor = NavigationScorePostprocessor(
+                    AnalysisConfig(), CityscapesNavigationSemantics, SilentLog,
+                    useNeonArgmax = paired, usePairedNeonArgmax = paired,
+                )
+                val timing = SemanticScoreTiming()
+                val viaHandle = checkNotNull(processor.postprocessScores(
+                    SemanticScores.FloatHandle(handle, timing = timing), spec, IntArray(spec.content.pixelCount),
+                )) { "the zero-copy path declined on this device" }
+                viaHandle.value.maskLease.use {
+                    assertEquals(if (paired) "neon_paired" else "scalar", timing.argmaxImplementation)
+                    assertEquals(viaCopy.value.mask, viaHandle.value.mask)
+                    assertEquals(viaCopy.value.stats, viaHandle.value.stats)
+                }
+            }
+        }
     }
 
     @Test

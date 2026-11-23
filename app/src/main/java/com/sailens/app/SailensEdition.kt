@@ -1,6 +1,8 @@
 package com.sailens.app
 
 import android.content.Context
+import com.sailens.BuildConfig
+import com.sailens.guidance.config.GuidanceOptimizationConfig
 import com.sailens.guidance.semantics.CityscapesNavigationSemantics
 import com.sailens.guidance.semantics.DetectionModelPreflight
 import com.sailens.guidance.semantics.SemanticModelPreflight
@@ -26,6 +28,17 @@ import org.koin.dsl.module
  * (`scripts/verify-distribution.py`), so this is where everything this edition varies goes.
  */
 val editionModule = module {
+    if (!BuildConfig.DEBUG) {
+        single {
+            GuidanceOptimizationConfig(
+                preferSemanticPreprocess = true,
+                useNeonArgmax = true,
+                directFloatNchw = true,
+                precomputeNearestIndices = true,
+                usePairedNeonArgmax = true,
+            )
+        }
+    }
     single<SailensAppSpec> {
         sailensEditionSpec(
             context = androidContext(),
